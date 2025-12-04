@@ -61,7 +61,7 @@ body { font-family: 'Tiro Bangla', serif; font-size: 25px; margin: 20px; }
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add Section</h5>
+        <h5 class="modal-title">Add/Edit Section</h5>
         <button type="button" class="btn-close" onclick="closeSectionModal()"></button>
       </div>
       <div class="modal-body">
@@ -80,7 +80,7 @@ body { font-family: 'Tiro Bangla', serif; font-size: 25px; margin: 20px; }
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" onclick="saveSection()">Save Section</button>
+        <button class="btn btn-primary" id="saveSectionBtn" onclick="saveSection()">Save Section</button>
         <button class="btn btn-secondary" onclick="closeSectionModal()">Close</button>
       </div>
     </div>
@@ -145,15 +145,116 @@ function printExam(){ window.print(); }
 function clearExam(){ if(confirm('Are you sure to clear everything?')){ sections=[]; examTitle='DU Admission Test'; watermarkText=''; localStorage.clear(); document.getElementById('exam-title').innerText=examTitle; document.getElementById('watermark').style.display='none'; renderSections();}}
 
 // Section Modal
-function openAddSectionModal(){ document.getElementById('sectionForm').reset(); document.getElementById('questionsContainer').innerHTML=''; addQuestionForm(); document.getElementById('sectionModal').style.display='block';}
+function openAddSectionModal(){ 
+    document.getElementById('sectionForm').reset(); 
+    document.getElementById('questionsContainer').innerHTML=''; 
+    addQuestionForm(); 
+    document.getElementById('saveSectionBtn').onclick = saveSection; // default save
+    document.getElementById('sectionModal').style.display='block';
+}
 function closeSectionModal(){ document.getElementById('sectionModal').style.display='none';}
-function addQuestionForm(){ const container=document.getElementById('questionsContainer'); const qDiv=document.createElement('div'); qDiv.className='mb-3 question-form'; qDiv.innerHTML=`<input type="text" class="form-control mb-1 q-text" placeholder="Question text" required><div class="d-flex gap-2"><input type="text" class="form-control option-input" placeholder="ক" required><input type="text" class="form-control option-input" placeholder="খ" required><input type="text" class="form-control option-input" placeholder="গ" required><input type="text" class="form-control option-input" placeholder="ঘ" required></div>`; container.appendChild(qDiv); }
-function saveSection(){ const name=document.getElementById('sectionName').value.trim(); const newPage=document.getElementById('newPage').checked; if(!name) return alert('Section name required'); const questionDivs=document.querySelectorAll('#questionsContainer .question-form'); if(questionDivs.length===0) return alert('Add at least one question'); const questionsArr=[]; for(const qDiv of questionDivs){ const text=qDiv.querySelector('.q-text').value.trim(); const opts=Array.from(qDiv.querySelectorAll('.option-input')).map(i=>i.value.trim()); if(!text||opts.some(o=>!o)) return alert('All question and options must be filled'); questionsArr.push({text:text, options:opts});} sections.push({name:name, newPage:newPage, questions:questionsArr}); localStorage.setItem('sections',JSON.stringify(sections)); renderSections(); closeSectionModal();}
+
+function addQuestionForm(){ 
+    const container=document.getElementById('questionsContainer'); 
+    const qDiv=document.createElement('div'); 
+    qDiv.className='mb-3 question-form'; 
+    qDiv.innerHTML=`
+        <input type="text" class="form-control mb-1 q-text" placeholder="Question text" required>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control option-input" placeholder="ক" required>
+            <input type="text" class="form-control option-input" placeholder="খ" required>
+            <input type="text" class="form-control option-input" placeholder="গ" required>
+            <input type="text" class="form-control option-input" placeholder="ঘ" required>
+        </div>
+    `; 
+    container.appendChild(qDiv); 
+}
+
+function saveSection(){ 
+    const name=document.getElementById('sectionName').value.trim(); 
+    const newPage=document.getElementById('newPage').checked; 
+    const questionDivs=document.querySelectorAll('#questionsContainer .question-form'); 
+    if(!name) return alert('Section name required'); 
+    if(questionDivs.length===0) return alert('Add at least one question'); 
+    const questionsArr=[]; 
+    for(const qDiv of questionDivs){ 
+        const text=qDiv.querySelector('.q-text').value.trim(); 
+        const opts=Array.from(qDiv.querySelectorAll('.option-input')).map(i=>i.value.trim()); 
+        if(!text||opts.some(o=>!o)) return alert('All question and options must be filled'); 
+        questionsArr.push({text:text, options:opts}); 
+    }
+    sections.push({name:name, newPage:newPage, questions:questionsArr}); 
+    localStorage.setItem('sections',JSON.stringify(sections)); 
+    renderSections(); 
+    closeSectionModal();
+}
 
 // Dashboard
-function openDashboard(){ const container=document.getElementById('dashboardContent'); container.innerHTML=''; sections.forEach((sec,sidx)=>{ const secDiv=document.createElement('div'); secDiv.className='mb-3'; secDiv.innerHTML=`<h5>${sec.name} <button class="btn btn-sm btn-danger" onclick="deleteSection(${sidx})">Delete Section</button></h5>`; sec.questions.forEach((q,qidx)=>{ const qDiv=document.createElement('div'); qDiv.innerHTML=`প্রশ্ন ${banglaNumber(qidx+1)}: ${q.text}`; secDiv.appendChild(qDiv); }); container.appendChild(secDiv); }); document.getElementById('dashboardModal').style.display='block';}
+function openDashboard(){ 
+    const container=document.getElementById('dashboardContent'); 
+    container.innerHTML=''; 
+    sections.forEach((sec,sidx)=>{
+        const secDiv=document.createElement('div'); 
+        secDiv.className='mb-3'; 
+        secDiv.innerHTML=`
+            <h5>${sec.name} 
+            <button class="btn btn-sm btn-warning" onclick="editSection(${sidx})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteSection(${sidx})">Delete Section</button></h5>
+        `;
+        sec.questions.forEach((q,qidx)=>{ 
+            const qDiv=document.createElement('div'); 
+            qDiv.innerHTML=`প্রশ্ন ${banglaNumber(qidx+1)}: ${q.text}`; 
+            secDiv.appendChild(qDiv); 
+        }); 
+        container.appendChild(secDiv); 
+    }); 
+    document.getElementById('dashboardModal').style.display='block';
+}
 function closeDashboard(){ document.getElementById('dashboardModal').style.display='none';}
 function deleteSection(idx){ if(confirm('Delete this section?')){ sections.splice(idx,1); localStorage.setItem('sections',JSON.stringify(sections)); renderSections(); openDashboard();} }
+
+// Edit Section
+function editSection(idx){
+    const sec = sections[idx];
+    document.getElementById('sectionForm').reset();
+    document.getElementById('sectionName').value = sec.name;
+    document.getElementById('newPage').checked = sec.newPage;
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    sec.questions.forEach(q=>{
+        const qDiv=document.createElement('div'); 
+        qDiv.className='mb-3 question-form'; 
+        qDiv.innerHTML=`
+            <input type="text" class="form-control mb-1 q-text" placeholder="Question text" value="${q.text}" required>
+            <div class="d-flex gap-2">
+                <input type="text" class="form-control option-input" placeholder="ক" value="${q.options[0]}" required>
+                <input type="text" class="form-control option-input" placeholder="খ" value="${q.options[1]}" required>
+                <input type="text" class="form-control option-input" placeholder="গ" value="${q.options[2]}" required>
+                <input type="text" class="form-control option-input" placeholder="ঘ" value="${q.options[3]}" required>
+            </div>
+        `;
+        container.appendChild(qDiv);
+    });
+    document.getElementById('sectionModal').style.display='block';
+    document.getElementById('saveSectionBtn').onclick = function(){
+        const name = document.getElementById('sectionName').value.trim();
+        const newPage = document.getElementById('newPage').checked;
+        const questionDivs = document.querySelectorAll('#questionsContainer .question-form');
+        if(!name) return alert('Section name required');
+        if(questionDivs.length===0) return alert('Add at least one question');
+        const questionsArr=[];
+        for(const qDiv of questionDivs){
+            const text = qDiv.querySelector('.q-text').value.trim();
+            const opts = Array.from(qDiv.querySelectorAll('.option-input')).map(i=>i.value.trim());
+            if(!text || opts.some(o=>!o)) return alert('All question and options must be filled');
+            questionsArr.push({text:text, options:opts});
+        }
+        sections[idx] = {name, newPage, questions:questionsArr}; 
+        localStorage.setItem('sections', JSON.stringify(sections));
+        renderSections();
+        closeSectionModal();
+    };
+}
 
 // JSON Export/Import
 function exportJSON(){
