@@ -13,7 +13,7 @@ body {
   background: #fff;
   margin: 0;
   padding: 0;
-  position: relative;
+  font-size: 25px;
 }
 
 .exam-title {
@@ -21,6 +21,7 @@ body {
   font-weight: bold;
   padding: 2px 2px;
   margin: 0;
+  font-size: 36px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -33,10 +34,6 @@ body {
   top: 0;
   z-index: 100;
   padding: 0.25rem;
-}
-
-.section-wrapper {
-  page-break-inside: avoid;
 }
 
 .section-block {
@@ -52,16 +49,8 @@ body {
 .question-card {
   border: 1px solid #000;
   margin: 2px;
-  padding: 2px;
+  padding-top: 2px;
   page-break-inside: avoid;
-}
-
-.question-header {
-  font-weight: bold;
-  margin: 0;
-  padding: 4px 2px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #ddd;
 }
 
 .options-list {
@@ -109,14 +98,15 @@ body {
   pointer-events: none;
 }
 
+.print-page { 
+  page-break-after: always; 
+  padding-top: 2px; /* সব পেজের উপরের প্যাডিং */
+}
+
 @media print {
   @page { size: A4; margin: 0; }
   .app-header, .toolbar, .empty-state, footer { display: none !important; }
-  body { background: #fff; }
-  .exam-title { page-break-after: avoid; }
-  .section-wrapper { page-break-inside: avoid; }
-  .section-block, .question-card { page-break-inside: avoid; }
-  .page-break { page-break-after: always; }
+  .print-page { page-break-after: always; padding-top:2px; }
   .watermark { display: block; }
 }
 </style>
@@ -134,7 +124,7 @@ body {
     <button id="addBtn" class="btn btn-primary btn-sm">Add</button>
     <button id="printBtn" class="btn btn-secondary btn-sm">Print</button>
     <button id="clearBtn" class="btn btn-outline-danger btn-sm">Clear</button>
-    <button id="toggleWatermark" class="btn btn-warning btn-sm">Toggle Watermark</button>
+    <button id="toggleWatermark" class="btn btn-warning btn-sm">Set Watermark</button>
   </div>
 </div>
 
@@ -148,7 +138,7 @@ body {
 
 <footer class="container-fluid p-0">
   <p class="text-muted small text-center m-1">
-    Prints 5 questions per A4 page. Explanations auto-size for readability.
+    Prints 5 questions per A4 page. Font fixed, page-break respected.
   </p>
 </footer>
 
@@ -167,9 +157,7 @@ document.getElementById("startAddBtn").onclick = promptAddQuestion;
 document.getElementById("printBtn").onclick = () => window.print();
 document.getElementById("clearBtn").onclick = clearAll;
 document.getElementById("setExamBtn").onclick = setExamName;
-document.getElementById("toggleWatermark").onclick = () => {
-  watermarkEl.style.display = watermarkEl.style.display==='none'?'block':'none';
-};
+document.getElementById("toggleWatermark").onclick = setWatermark;
 
 function loadItems() {
   try { quizItems = JSON.parse(localStorage.getItem(STORE_KEY)) || []; } 
@@ -196,8 +184,20 @@ function clearAll() {
   }
 }
 
+function toBanglaNumber(num){
+  const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  return num.toString().split('').map(d => bn[parseInt(d)]).join('');
+}
+
+function setWatermark() {
+  const text = prompt("Enter watermark text:");
+  if(text!==null){
+    watermarkEl.textContent = text;
+    watermarkEl.style.display='block';
+  }
+}
+
 function promptAddQuestion() {
-  // Section dropdown
   let sections = [...new Set(quizItems.map(q=>q.section))];
   sections.unshift("New Section");
 
@@ -209,9 +209,7 @@ function promptAddQuestion() {
     if(idx===0){
       section = prompt("Enter new section name:");
       if(section===null) return;
-    } else {
-      section = sections[idx];
-    }
+    } else { section = sections[idx]; }
   } else {
     section = prompt("Enter Section Name:");
     if(section===null) return;
@@ -254,39 +252,37 @@ function render() {
   emptyEl.style.display = "none";
 
   let lastSection="";
+  let pageCount=0;
+  let pageDiv = null;
   quizItems.forEach((item,idx)=>{
-    const serial = `প্রশ্ন–${idx+1}`;
-
-    // Section wrapper
-    if(item.section!==lastSection){
-      lastSection = item.section;
-      const wrapper = document.createElement("div");
-      wrapper.className = "section-wrapper";
-      if(item.newPage) wrapper.style.pageBreakBefore="always";
-
-      const sec = document.createElement("div");
-      sec.className="section-block";
-      sec.textContent=item.section;
-      wrapper.appendChild(sec);
-      rootEl.appendChild(wrapper);
+    // Start new print-page after 5 questions or new section page
+    if(pageCount%5===0 || item.newPage){
+      pageDiv = document.createElement("div");
+      pageDiv.className = "print-page";
+      pageDiv.style.paddingTop="2px"; // পেজের উপরের প্যাডিং
+      rootEl.appendChild(pageDiv);
+      pageCount=0;
     }
 
-    const wrapperDivs=rootEl.getElementsByClassName("section-wrapper");
-    const wrapper=wrapperDivs[wrapperDivs.length-1];
+    // Section header
+    if(item.section!==lastSection){
+      lastSection=item.section;
+      const sec=document.createElement("div");
+      sec.className="section-block";
+      sec.textContent=item.section;
+      pageDiv.appendChild(sec);
+    }
 
-    // Question card
+    const serial = `প্রশ্ন ${toBanglaNumber(idx+1)} :`;
+
     const card=document.createElement("article");
     card.className="question-card";
+    card.style.paddingTop="2px";
 
     const header=document.createElement("div");
     header.className="question-header";
-    header.textContent=serial;
+    header.textContent=`${serial} ${item.question}`;
     card.appendChild(header);
-
-    const qText=document.createElement("div");
-    qText.textContent=item.question;
-    qText.style.padding="2px";
-    card.appendChild(qText);
 
     const ul=document.createElement("ul");
     ul.className="options-list";
@@ -308,7 +304,8 @@ function render() {
     expl.textContent=`ব্যাখ্যা: ${item.explanation}`;
     card.appendChild(expl);
 
-    wrapper.appendChild(card);
+    pageDiv.appendChild(card);
+    pageCount++;
   });
 }
 
