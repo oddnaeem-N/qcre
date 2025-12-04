@@ -1,148 +1,277 @@
-<!DOCTYPE html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quiz Sheet Builder</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet"><style>body{font-family:"Tiro Bangla",sans-serif;background:#fff;margin:0;padding:0}.print-wrapper{padding-left:2px;padding-right:2px}@media print{@page{size:A4;margin:0}.print-wrapper{padding-left:2px;padding-right:2px}.app-header,.empty-state,.toolbar,footer{display:none!important}body{background:#fff}.page-break{page-break-after:always}}.exam-title{text-align:center;font-weight:700;font-size:1.2rem;padding-top:.2px;margin:0}.app-header{background:#fff;border-bottom:1px solid #dee2e6;position:sticky;top:0;z-index:100;padding:.25rem}.question-card{border:1px solid #000;padding:0;margin:0;page-break-inside:avoid;break-inside:avoid-page}.question-header{font-weight:700;margin:0;padding:.25rem;background:#f8f9fa;border-bottom:1px solid #ddd}.section-block{text-align:center;font-weight:700;background:#e9ecef;margin-top:10px;margin-bottom:4px;padding:4px;border:1px solid #ccc}.options-list{margin:0;padding-left:1rem}.options-list li{margin:0;padding:0}.answer-line{font-weight:700;margin:0;padding:.25rem}.explanation{margin:0;padding:.25rem;color:#6c757d}.explain-small{font-size:.85rem}.explain-medium{font-size:.95rem}.explain-large{font-size:1rem}.empty-state{border:1px dashed #dee2e6;padding:.5rem;text-align:center;color:#6c757d}</style></head><body><div class="print-wrapper"><div id="examTitle" class="exam-title">[Enter Exam Name]</div><div class="app-header d-flex justify-content-between align-items-center"><h1 class="h6 mb-0">Quiz Sheet Builder</h1><div class="toolbar d-flex gap-1"><button id="setExamBtn" class="btn btn-info btn-sm">Set Exam Name</button><button id="addBtn" class="btn btn-primary btn-sm">Add</button><button id="printBtn" class="btn btn-secondary btn-sm">Print</button><button id="clearBtn" class="btn btn-outline-danger btn-sm">Clear</button></div></div><main class="container-fluid p-0"><div id="questionsRoot"></div><div id="emptyState" class="empty-state"><p>No questions yet.</p><button id="startAddBtn" class="btn btn-primary btn-sm">Add question</button></div></main><footer class="container-fluid p-0"><p class="text-muted small text-center m-1">Prints 5 questions per A4 page. Explanations auto-size for readability.</p></footer></div><script>const STORE_KEY = "quizItems";
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Sheet Builder</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: "Tiro Bangla", sans-serif;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+      font-size: 28px !important; /* BIG FONT */
+    }
+
+    /* PRINT WRAPPER */
+    .print-wrapper {
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+
+    /* Print rules */
+    @media print {
+      @page { size: A4; margin: 0; }
+
+      .app-header, .toolbar, .empty-state, footer {
+        display: none !important;
+      }
+
+      .print-wrapper {
+        padding-left: 2px;
+        padding-right: 2px;
+      }
+
+      body { background: #fff; }
+      .page-break { page-break-after: always; }
+    }
+
+    /* Title */
+    .exam-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 32px;
+      margin-bottom: 4px;
+    }
+
+    /* Sections */
+    .section-block {
+      text-align: center;
+      font-weight: bold;
+      background: #e9ecef;
+      padding: 4px;
+      border: 1px solid #ccc;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    /* Question Card */
+    .question-card {
+      border: 1px solid #000;
+      padding: 0;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+
+    .question-header {
+      font-weight: bold;
+      padding: 6px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+    }
+
+    /* Horizontal Options */
+    .options-horizontal {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      padding: 8px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .answer-line {
+      font-weight: bold;
+      padding: 6px;
+    }
+
+    .explanation {
+      padding: 6px;
+      color: #444;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="print-wrapper">
+
+  <div id="examTitle" class="exam-title">[Enter Exam Name]</div>
+
+  <div class="app-header d-flex justify-content-between align-items-center">
+    <h1 class="h6 mb-0">Quiz Sheet Builder</h1>
+
+    <div class="toolbar d-flex gap-1">
+      <button id="setExamBtn" class="btn btn-info btn-sm">Set Exam Name</button>
+      <button id="addBtn" class="btn btn-primary btn-sm">Add</button>
+      <button id="printBtn" class="btn btn-secondary btn-sm">Print</button>
+      <button id="clearBtn" class="btn btn-outline-danger btn-sm">Clear</button>
+    </div>
+  </div>
+
+  <main class="container-fluid p-0">
+    <div id="questionsRoot"></div>
+
+    <div id="emptyState" class="empty-state">
+      <p>No questions yet.</p>
+      <button id="startAddBtn" class="btn btn-primary btn-sm">Add question</button>
+    </div>
+  </main>
+
+  <footer class="container-fluid p-0">
+    <p class="text-muted small text-center m-1">
+      Horizontal options + big font enabled.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+  const STORE_KEY = "quizItems";
   const TITLE_KEY = "examTitle";
   let quizItems = [];
 
-  const rootEl = document.getElementById("questionsRoot");
-  const emptyEl = document.getElementById("emptyState");
-  const examTitleEl = document.getElementById("examTitle");
+  const root = document.getElementById("questionsRoot");
+  const empty = document.getElementById("emptyState");
+  const examTitle = document.getElementById("examTitle");
 
-  document.getElementById("addBtn").onclick = promptAddQuestion;
-  document.getElementById("startAddBtn").onclick = promptAddQuestion;
+  document.getElementById("addBtn").onclick = addPrompt;
+  document.getElementById("startAddBtn").onclick = addPrompt;
   document.getElementById("printBtn").onclick = () => window.print();
   document.getElementById("clearBtn").onclick = clearAll;
-  document.getElementById("setExamBtn").onclick = setExamName;
+  document.getElementById("setExamBtn").onclick = setExam;
 
-  function loadItems() {
-    try {
-      quizItems = JSON.parse(localStorage.getItem(STORE_KEY)) || [];
-    } catch { quizItems = []; }
-
-    const title = localStorage.getItem(TITLE_KEY);
-    if (title) examTitleEl.textContent = title;
+  function load() {
+    quizItems = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+    const saved = localStorage.getItem(TITLE_KEY);
+    if (saved) examTitle.textContent = saved;
   }
 
-  function saveItems() {
+  function save() {
     localStorage.setItem(STORE_KEY, JSON.stringify(quizItems));
   }
 
-  function setExamName() {
-    const name = prompt("Enter Exam Name:");
-    if (name !== null) {
-      examTitleEl.textContent = name.trim();
-      localStorage.setItem(TITLE_KEY, name.trim());
+  function setExam() {
+    const t = prompt("Enter Exam Name:");
+    if (t) {
+      examTitle.textContent = t;
+      localStorage.setItem(TITLE_KEY, t);
     }
   }
 
   function clearAll() {
-    if (confirm("Clear all questions?")) {
-      localStorage.removeItem(STORE_KEY);
+    if (confirm("Clear all?")) {
       quizItems = [];
+      localStorage.removeItem(STORE_KEY);
       render();
     }
   }
 
-  function promptAddQuestion() {
-    const section = prompt("Section:"); if (section === null) return;
-    const question = prompt("Question:"); if (question === null) return;
+  function addPrompt() {
+    const section = prompt("Section:"); if (!section) return;
+    const q = prompt("Question:"); if (!q) return;
 
-    const o1 = prompt("Option 1:"); if (o1 === null) return;
-    const o2 = prompt("Option 2:"); if (o2 === null) return;
-    const o3 = prompt("Option 3:"); if (o3 === null) return;
-    const o4 = prompt("Option 4:"); if (o4 === null) return;
+    const o1 = prompt("Option 1:"); if (!o1) return;
+    const o2 = prompt("Option 2:"); if (!o2) return;
+    const o3 = prompt("Option 3:"); if (!o3) return;
+    const o4 = prompt("Option 4:"); if (!o4) return;
 
-    const correct = prompt("Correct option number (1-4):"); 
+    const correct = prompt("Correct option (1-4):");
     if (!["1","2","3","4"].includes(correct)) return;
 
-    const explanation = prompt("Explanation:") ?? "";
+    const exp = prompt("Explanation:") || "";
 
     quizItems.push({
-      section: section.trim(),
-      question: question.trim(),
-      options: [o1.trim(), o2.trim(), o3.trim(), o4.trim()],
+      section,
+      question: q,
+      options: [o1, o2, o3, o4],
       correctIndex: Number(correct) - 1,
-      explanation: explanation.trim()
+      explanation: exp
     });
 
-    saveItems();
+    save();
     render();
   }
 
-  function explanationClass(text) {
-    const len = text.length;
-    if (len <= 120) return "explain-large";
-    if (len <= 220) return "explain-medium";
-    return "explain-small";
-  }
-
-  // FIXED RENDER — বাংলা সিরিয়াল + সেকশন গ্রুপিং with padding wrapper support
   function render() {
-    rootEl.innerHTML = "";
+    root.innerHTML = "";
 
-    if (!quizItems.length) {
-      emptyEl.style.display = "";
+    if (quizItems.length === 0) {
+      empty.style.display = "";
       return;
     }
+    empty.style.display = "none";
 
-    emptyEl.style.display = "none";
+    let lastSec = "";
 
-    let lastSection = "";
+    quizItems.forEach((item, i) => {
 
-    quizItems.forEach((item, idx) => {
-
-      const serial = `প্রশ্ন–${idx + 1}`;
-
-      if (item.section !== lastSection) {
-        lastSection = item.section;
+      if (item.section !== lastSec) {
+        lastSec = item.section;
         const sec = document.createElement("div");
         sec.className = "section-block";
         sec.textContent = item.section;
-        rootEl.appendChild(sec);
+        root.appendChild(sec);
       }
 
-      const card = document.createElement("article");
+      const card = document.createElement("div");
       card.className = "question-card";
 
       const header = document.createElement("div");
       header.className = "question-header";
-      header.textContent = serial;
+      header.textContent = `প্রশ্ন–${i + 1}`;
       card.appendChild(header);
 
-      const qText = document.createElement("div");
-      qText.textContent = item.question;
-      qText.style.padding = "4px";
-      card.appendChild(qText);
+      const q = document.createElement("div");
+      q.style.padding = "8px";
+      q.textContent = item.question;
+      card.appendChild(q);
 
-      const ul = document.createElement("ul");
-      ul.className = "options-list";
+      const wrap = document.createElement("div");
+      wrap.className = "options-horizontal";
+
       const labels = ["(ক)", "(খ)", "(গ)", "(ঘ)"];
-
-      item.options.forEach((op, i) => {
-        const li = document.createElement("li");
-        li.textContent = `${labels[i]} ${op}`;
-        ul.appendChild(li);
+      item.options.forEach((op, idx) => {
+        const opt = document.createElement("div");
+        opt.className = "option-item";
+        opt.textContent = `${labels[idx]} ${op}`;
+        wrap.appendChild(opt);
       });
-      card.appendChild(ul);
+
+      card.appendChild(wrap);
 
       const ans = document.createElement("div");
       ans.className = "answer-line";
-      ans.textContent =
-        `সঠিক উত্তর: ${labels[item.correctIndex]} ${item.options[item.correctIndex]}`;
+      ans.textContent = `সঠিক উত্তর: ${labels[item.correctIndex]} ${item.options[item.correctIndex]}`;
       card.appendChild(ans);
 
-      const expl = document.createElement("div");
-      expl.className = `explanation ${explanationClass(item.explanation)}`;
-      expl.textContent = `ব্যাখ্যা: ${item.explanation}`;
-      card.appendChild(expl);
+      const ex = document.createElement("div");
+      ex.className = "explanation";
+      ex.textContent = `ব্যাখ্যা: ${item.explanation}`;
+      card.appendChild(ex);
 
-      rootEl.appendChild(card);
+      root.appendChild(card);
 
-      if ((idx + 1) % 5 === 0) {
+      if ((i + 1) % 5 === 0) {
         const br = document.createElement("div");
         br.className = "page-break";
-        rootEl.appendChild(br);
+        root.appendChild(br);
       }
     });
   }
 
-  loadItems();
-  render();</script></body></html>
+  load();
+  render();
+</script>
+
+</body>
+</html>
