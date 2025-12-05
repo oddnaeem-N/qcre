@@ -61,65 +61,61 @@ document.getElementById("exam-title").innerText=examTitle;
 
 function banglaNumber(n){return n.toString().split('').map(d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][parseInt(d)]).join('');}
 
-/* Render Sections with Dynamic Height Flow */
+/* Render Sections with Dynamic Column Flow */
 function renderSections(){
   const paper=document.getElementById("exam-paper");
   paper.querySelectorAll(".a4-page").forEach(x=>x.remove());
 
-  const pageHeight=1120; // Approx A4 content height in px
-  let page=document.createElement("div"); page.className='a4-page';
-  let colL=document.createElement("div"); colL.className="column";
-  let colR=document.createElement("div"); colR.className="column";
-  page.appendChild(colL); page.appendChild(colR); paper.appendChild(page);
+  const pageHeight=1120; // approx A4 content height in px
+  let page=createNewPage();
   let leftHeight=0, rightHeight=0;
 
   sections.forEach(sec=>{
     if(sec.newPage){
-        page=document.createElement("div"); page.className='a4-page';
-        colL=document.createElement("div"); colL.className="column";
-        colR=document.createElement("div"); colR.className="column";
-        page.appendChild(colL); page.appendChild(colR); paper.appendChild(page);
+        page=createNewPage();
         leftHeight=0; rightHeight=0;
     }
 
+    // Section header
     const header=document.createElement("div"); header.className="section-header"; header.innerText=sec.name;
+    let headerHeight=measureHeight(header);
 
-    // Section header first, left column if possible
-    if(leftHeight+header.offsetHeight<pageHeight){ colL.appendChild(header); leftHeight+=header.offsetHeight+4; }
-    else if(rightHeight+header.offsetHeight<pageHeight){ colR.appendChild(header); rightHeight+=header.offsetHeight+4; }
-    else{
-        page=document.createElement("div"); page.className='a4-page';
-        colL=document.createElement("div"); colL.className="column";
-        colR=document.createElement("div"); colR.className="column";
-        page.appendChild(colL); page.appendChild(colR); paper.appendChild(page);
-        leftHeight=0; rightHeight=0;
-        colL.appendChild(header); leftHeight+=header.offsetHeight+4;
-    }
+    if(leftHeight+headerHeight<=pageHeight){page.left.appendChild(header); leftHeight+=headerHeight;}
+    else if(rightHeight+headerHeight<=pageHeight){page.right.appendChild(header); rightHeight+=headerHeight;}
+    else{page=createNewPage(); page.left.appendChild(header); leftHeight=headerHeight; rightHeight=0;}
 
+    // Questions
     sec.questions.forEach((q,i)=>{
       const qb=document.createElement("div"); qb.className="question-box";
       qb.innerHTML=`<strong>প্রশ্ন ${banglaNumber(i+1)}:</strong> ${q.text}`;
       const opts=document.createElement("div"); opts.className="options";
       ['(ক)','(খ)','(গ)','(ঘ)'].forEach((l,j)=>{const od=document.createElement("div");od.className="option";od.innerText=`${l} ${q.options[j]}`;opts.appendChild(od);});
       qb.appendChild(opts);
+      const qHeight=measureHeight(qb);
 
-      // TEMP append invisible to measure height
-      qb.style.visibility="hidden"; document.body.appendChild(qb);
-      const qbHeight=qb.offsetHeight+4; // margin
-      document.body.removeChild(qb); qb.style.visibility="visible";
-
-      if(leftHeight+qbHeight<=pageHeight){ colL.appendChild(qb); leftHeight+=qbHeight; }
-      else if(rightHeight+qbHeight<=pageHeight){ colR.appendChild(qb); rightHeight+=qbHeight; }
-      else{
-        page=document.createElement("div"); page.className='a4-page';
-        colL=document.createElement("div"); colL.className="column";
-        colR=document.createElement("div"); colR.className="column";
-        page.appendChild(colL); page.appendChild(colR); paper.appendChild(page);
-        leftHeight=0; rightHeight=0;
-        colL.appendChild(qb); leftHeight+=qbHeight;
-      }
+      if(leftHeight+qHeight<=pageHeight){page.left.appendChild(qb); leftHeight+=qHeight;}
+      else if(rightHeight+qHeight<=pageHeight){page.right.appendChild(qb); rightHeight+=qHeight;}
+      else{page=createNewPage(); page.left.appendChild(qb); leftHeight=qHeight; rightHeight=0;}
     });
   });
+}
+
+// Measure element height dynamically
+function measureHeight(el){
+  el.style.visibility="hidden"; document.body.appendChild(el);
+  const h=el.offsetHeight+4; // margin
+  document.body.removeChild(el); el.style.visibility="visible";
+  return h;
+}
+
+// Create new page and columns
+function createNewPage(){
+  const page=document.createElement("div"); page.className="a4-page";
+  const colL=document.createElement("div"); colL.className="column";
+  const colR=document.createElement("div"); colR.className="column";
+  page.appendChild(colL); page.appendChild(colR);
+  document.getElementById("exam-paper").appendChild(page);
+  return {page,page,left:colL,right:colR};
 }
 
 /* Toolbar functions */
