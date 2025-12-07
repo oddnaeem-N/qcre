@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="utf-8">
-<title>প্রশ্ন বানান</title>
+<title>ডিফল্ট টাইটেল</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
 <style>
@@ -13,7 +13,7 @@ body {
     padding:4px;
     color:#111;
 }
-h2 { text-align:center; margin:8px; font-size:24px; }
+h1 { text-align:center; margin:8px; font-size:24px; }
 .print-btn {
     display:inline-block;
     padding:6px 10px;
@@ -26,9 +26,7 @@ h2 { text-align:center; margin:8px; font-size:24px; }
     margin:4px;
 }
 @media print { 
-    .print-btn, #addQuestion, .delete-btn { 
-        display:none !important; 
-    } 
+    .print-btn, #controls, .delete-btn { display:none !important; } 
 }
 .questions { 
     column-count:2; 
@@ -63,22 +61,31 @@ h2 { text-align:center; margin:8px; font-size:24px; }
 }
 .footer { text-align:right; font-weight:700; margin-top:10px; }
 
-/* Add Question Form */
-#addQuestion {
-    margin:10px 0;
-    padding:10px;
-    border:1px solid #ccc;
+/* Controls Section */
+#controls {
+    border:1px solid #ccc; 
+    padding:10px; 
+    margin-bottom:10px;
 }
-#addQuestion input, #addQuestion select { width:100%; margin:3px 0; padding:4px; }
-#addQuestion label { font-weight:bold; }
-#addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }
+#controls input { width:100%; margin:3px 0; padding:4px; }
+#controls button { padding:6px 10px; margin-top:6px; cursor:pointer; }
 </style>
 </head>
 <body>
 
+<div id="controls">
+    <h3>হেডিং ও টাইটেল পরিবর্তন করুন</h3>
+    <label>পেজ টাইটেল:</label>
+    <input type="text" id="pageTitle" placeholder="পেজ টাইটেল লিখুন">
+    <label>প্রদর্শিত হেডিং:</label>
+    <input type="text" id="pageHeading" placeholder="হেডিং লিখুন">
+    <button id="updateTitle">আপডেট করুন</button>
+</div>
+
 <button class="print-btn" onclick="window.print()">🖨️ Print</button>
 
-<!-- Add Question Form -->
+<h1 id="mainHeading">ডিফল্ট হেডিং</h1>
+
 <div id="addQuestion">
     <h3>নতুন প্রশ্ন এড করুন</h3>
     <label>প্রশ্ন:</label>
@@ -98,7 +105,7 @@ h2 { text-align:center; margin:8px; font-size:24px; }
 </div>
 
 <div class="questions" id="questions"></div>
-<div class="footer"></div>
+<div class="footer">PDF প্রস্তুতকারক: ইফতেখার নাইম</div>
 
 <script>
 // ডিফল্ট প্রশ্ন
@@ -123,7 +130,7 @@ function toBengaliNum(num){
     return num.toString().split('').map(d=>bn[d]||d).join('');
 }
 
-// Render
+// Render Questions
 function renderQuestions(){
     const container = document.getElementById('questions');
     container.innerHTML='';
@@ -169,6 +176,14 @@ document.getElementById('addBtn').addEventListener('click',()=>{
     document.getElementById('optB').value='';
     document.getElementById('optC').value='';
     document.getElementById('optD').value='';
+});
+
+// Update title and heading
+document.getElementById('updateTitle').addEventListener('click',()=>{
+    const t = document.getElementById('pageTitle').value.trim();
+    const h = document.getElementById('pageHeading').value.trim();
+    if(t) document.title = t;
+    if(h) document.getElementById('mainHeading').innerText = h;
 });
 </script>
 
