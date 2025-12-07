@@ -9,8 +9,8 @@
 body {  
     font-family: 'Tiro Bangla', serif;  
     font-size: 18px;  
-    margin:0px;  
-    padding:5px;  
+    margin:4px;  
+    padding:4px;  
     color:#111;  
 }  
 h2 { text-align:center; margin:8px; font-size:24px; }  
@@ -136,7 +136,19 @@ function toBengaliNum(num){
     return num.toString().split('').map(d=>bn[d]||d).join('');  
 }  
 
-// Render  
+// LocalStorage থেকে লোড
+window.addEventListener('load', () => {
+    const savedQuestions = localStorage.getItem('questions');
+    const savedHeading = localStorage.getItem('heading');
+    if(savedQuestions) questions = JSON.parse(savedQuestions);
+    if(savedHeading) {
+        document.getElementById('mainHeading').innerText = savedHeading;
+        document.getElementById('headingInput').value = savedHeading;
+    }
+    renderQuestions();
+});
+
+// Render questions এবং LocalStorage এ সেভ
 function renderQuestions(){  
     const container = document.getElementById('questions');  
     container.innerHTML='';  
@@ -153,7 +165,8 @@ function renderQuestions(){
             <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>`;  
         container.appendChild(div);  
     });  
-}  
+    localStorage.setItem('questions', JSON.stringify(questions));
+}
 
 // Delete question  
 function deleteQuestion(idx){  
@@ -162,9 +175,6 @@ function deleteQuestion(idx){
         renderQuestions();  
     }  
 }  
-
-// Initial render  
-renderQuestions();  
 
 // Add new question  
 document.getElementById('addBtn').addEventListener('click',()=>{  
@@ -184,10 +194,13 @@ document.getElementById('addBtn').addEventListener('click',()=>{
     document.getElementById('optD').value='';  
 });  
 
-// Update heading  
+// Update heading এবং LocalStorage এ সেভ
 function updateHeading(){  
     const h = document.getElementById('headingInput').value.trim();  
-    if(h) document.getElementById('mainHeading').innerText = h;  
+    if(h){
+        document.getElementById('mainHeading').innerText = h;  
+        localStorage.setItem('heading', h);
+    }
 }  
 </script>  
 
