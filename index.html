@@ -1,160 +1,178 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<title>DU Admission Test Paper Generator</title>
+<meta charset="utf-8">
+<title>ঢাবি অবাণিজ্য ২৫-২৬ (আইসিটি)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-body{font-family:'Tiro Bangla',serif;margin:2px;padding:0;font-size:16px;}
-#exam-title{font-size:25px;font-weight:bold;text-align:center;margin-bottom:5px;}
-.section-header{background:#f8f9fa;font-weight:bold;font-size:18px;padding:6px;margin-top:10px;border:none;}
-.question-box{padding:6px;margin:4px 0;border:none;page-break-inside:avoid;}
-.options{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;}
-.option{width:48%;}
-#toolbar{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;}
-.a4-page{width:210mm;min-height:297mm;display:flex;flex-wrap:wrap;page-break-after:always;box-sizing:border-box;padding:2px;}
-.column{width:50%;padding:0 2px;box-sizing:border-box;display:flex;flex-direction:column;}
+body {
+    font-family: 'Tiro Bangla', serif;
+    font-size: 18px;
+    margin:4px;
+    padding:4px;
+    color:#111;
+}
+h2 { text-align:center; margin:8px; font-size:24px; }
+.print-btn {
+    display:inline-block;
+    padding:6px 10px;
+    background:#0078d7;
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:16px;
+    margin:4px;
+}
+@media print { 
+    .print-btn, #addQuestion, .delete-btn { 
+        display:none !important; 
+    } 
+}
+.questions { 
+    column-count:2; 
+    column-gap:5px; 
+    margin:4px; 
+}
+.question { 
+    margin-bottom:8px; 
+    page-break-inside: avoid; 
+    font-weight:bold; 
+    position:relative;
+}
+.options { 
+    display:grid; 
+    grid-template-columns:1fr 1fr; 
+    gap:4px; 
+    margin-left:6px; 
+    font-weight:normal;
+}
+.correct { color:green; }
+.delete-btn {
+    position:absolute;
+    top:0;
+    right:0;
+    background:#e74c3c;
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:2px 6px;
+    cursor:pointer;
+    font-size:12px;
+}
+.footer { text-align:right; font-weight:700; margin-top:10px; }
+
+/* Add Question Form */
+#addQuestion {
+    margin:10px 0;
+    padding:10px;
+    border:1px solid #ccc;
+}
+#addQuestion input, #addQuestion select { width:100%; margin:3px 0; padding:4px; }
+#addQuestion label { font-weight:bold; }
+#addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<div id="toolbar">
-<button class="btn btn-primary" onclick="setExamTitle()">Set Exam Name</button>
-<button class="btn btn-warning" onclick="openAddSectionModal()">Add Section</button>
-<button class="btn btn-success" onclick="downloadPDF()">Download PDF</button>
-<button class="btn btn-secondary" onclick="exportJSON()">Export JSON</button>
-<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import JSON</button>
-<input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-<button class="btn btn-danger" onclick="clearExam()">Clear</button>
+<button class="print-btn" onclick="window.print()">🖨️ Print</button>
+
+<h2>ঢাবি অবাণিজ্য ২৫-২৬ (আইসিটি)</h2>
+
+<!-- Add Question Form -->
+<div id="addQuestion">
+    <h3>নতুন প্রশ্ন এড করুন</h3>
+    <label>প্রশ্ন:</label>
+    <input type="text" id="manualText" placeholder="প্রশ্ন লিখুন" required>
+    <label>A) অপশন:</label><input type="text" id="optA" required>
+    <label>B) অপশন:</label><input type="text" id="optB" required>
+    <label>C) অপশন:</label><input type="text" id="optC" required>
+    <label>D) অপশন:</label><input type="text" id="optD" required>
+    <label>সঠিক উত্তর:</label>
+    <select id="correctOpt">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+    </select>
+    <button id="addBtn">এড করুন</button>
 </div>
 
-<div id="exam-paper">
-  <div id="exam-title">DU Admission Test</div>
-  <hr>
-</div>
-
-<!-- Section Modal -->
-<div class="modal" id="sectionModal">
-<div class="modal-dialog">
-<div class="modal-content">
-<div class="modal-header"><h5 class="modal-title">Add Section</h5><button class="btn-close" onclick="closeSectionModal()"></button></div>
-<div class="modal-body">
-<form id="sectionForm">
-<label>Section Name</label>
-<input type="text" id="sectionName" class="form-control mb-2" required>
-<label><input type="checkbox" id="newPage"> Start on new page</label>
-<h6>Questions</h6>
-<div id="questionsContainer"></div>
-<button type="button" class="btn btn-sm btn-success mt-2" onclick="addQuestionForm()">Add Question</button>
-</form>
-</div>
-<div class="modal-footer"><button class="btn btn-primary" id="saveSectionBtn">Save</button></div>
-</div></div></div>
+<div class="questions" id="questions"></div>
+<div class="footer"></div>
 
 <script>
-let examTitle=localStorage.getItem("examTitle")||"DU Admission Test";
-let sections=JSON.parse(localStorage.getItem("sections")||"[]");
-document.getElementById("exam-title").innerText=examTitle;
+// ডিফল্ট প্রশ্ন
+let questions = [
+    {text:"ফাইবার অপটিক কেবলের মাধ্যমে ভাটা প্রেরণের জন্য কোন আলোক রশ্মি ব্যবহৃত হয়?", option:["লেজার","গামা","আলফা","গামা"], correct:"A"},
+    {text:"কোনটি ইনপুট ডিভাইস?", option:["স্ক্যানার","মনিটর","প্রিন্টার","স্পিকার"], correct:"A"},
+    {text:"HTML-এ সবচেয়ে বড় শিরোনাম কোন ট্যাগ?", option:["h1","h6","Head","heading"], correct:"A"},
+    {text:"'LTE'-এর পূর্ণরূপ কি?", option:["Long Time Evolution","Long Term Evolution","Line Transmission Efficiency","Linear Transfer Enrichment"], correct:"B"},
+    {text:"গাইডেড ট্রান্সমিশন মাধ্যম কোনটি?", option:["মাইক্রোওয়েভ","ইনফ্রারেড","ফাইবার অপটিক কেবল","রেডিও ওয়েভ"], correct:"C"},
+    {text:"কোন ডিভাইস ভিন্ন প্রোটোকল ব্যবহারকারী নেটওয়ার্ক সংযুক্ত করে?", option:["রাউটার","গেটওয়ে","সুইচ","মডেম"], correct:"B"},
+    {text:"৫জি নেটওয়ার্কে কোন প্রযুক্তি যুক্ত?", option:["সার্কিট সুইচিং","প্যাকেট সুইচিং","এনালগ ট্রান্সমিশন","মিলিমিটার ওয়েভস"], correct:"D"},
+    {text:"কোন ট্রান্সলেটর পুরো প্রোগ্রাম একবারে মেশিন কোডে অনুবাদ করে?", option:["কম্পাইলার","ইন্টারপ্রেটার","অ্যাসেম্বলার","লিঙ্কার"], correct:"A"},
+    {text:"কোনটি অপারেটিং সিস্টেম নয়?", option:["লিনাক্স","উইন্ডোজ","ম্যাকওএস","MS WORD"], correct:"D"},
+    {text:"কোন টপোলজিতে প্রতিটি ডিভাইস একটি কেন্দ্রীয় হাবের সাথে সংযুক্ত থাকে?", option:["বাস","স্টার","মেশ","রিং"], correct:"B"},
+    {text:"স্ট্যান্ডার্ড ASCII কত বিট?", option:["৪ বিট","৭ বিট","৮ বিট","১৬ বিট"], correct:"B"},
+    {text:"কোনটি C ভাষার রিজার্ভড কীওয়ার্ড নয়?", option:["long","break","loop","while"], correct:"C"}
+];
 
-function banglaNumber(n){return n.toString().split('').map(d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][parseInt(d)]).join('');}
+// বাংলা নাম্বার
+function toBengaliNum(num){
+    const bn=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toString().split('').map(d=>bn[d]||d).join('');
+}
 
-/* Render Sections with Dynamic Column Flow */
-function renderSections(){
-  const paper=document.getElementById("exam-paper");
-  paper.querySelectorAll(".a4-page").forEach(x=>x.remove());
-
-  const pageHeight=1120; // approx A4 content height in px
-  let page=createNewPage();
-  let leftHeight=0, rightHeight=0;
-
-  sections.forEach(sec=>{
-    if(sec.newPage){
-        page=createNewPage();
-        leftHeight=0; rightHeight=0;
-    }
-
-    // Section header
-    const header=document.createElement("div"); header.className="section-header"; header.innerText=sec.name;
-    let headerHeight=measureHeight(header);
-
-    if(leftHeight+headerHeight<=pageHeight){page.left.appendChild(header); leftHeight+=headerHeight;}
-    else if(rightHeight+headerHeight<=pageHeight){page.right.appendChild(header); rightHeight+=headerHeight;}
-    else{page=createNewPage(); page.left.appendChild(header); leftHeight=headerHeight; rightHeight=0;}
-
-    // Questions
-    sec.questions.forEach((q,i)=>{
-      const qb=document.createElement("div"); qb.className="question-box";
-      qb.innerHTML=`<strong>প্রশ্ন ${banglaNumber(i+1)}:</strong> ${q.text}`;
-      const opts=document.createElement("div"); opts.className="options";
-      ['(ক)','(খ)','(গ)','(ঘ)'].forEach((l,j)=>{const od=document.createElement("div");od.className="option";od.innerText=`${l} ${q.options[j]}`;opts.appendChild(od);});
-      qb.appendChild(opts);
-      const qHeight=measureHeight(qb);
-
-      if(leftHeight+qHeight<=pageHeight){page.left.appendChild(qb); leftHeight+=qHeight;}
-      else if(rightHeight+qHeight<=pageHeight){page.right.appendChild(qb); rightHeight+=qHeight;}
-      else{page=createNewPage(); page.left.appendChild(qb); leftHeight=qHeight; rightHeight=0;}
+// Render
+function renderQuestions(){
+    const container = document.getElementById('questions');
+    container.innerHTML='';
+    questions.forEach((q,idx)=>{
+        const div = document.createElement('div');
+        div.className='question';
+        div.innerHTML=`${toBengaliNum(idx+1)}. ${q.text}
+            <div class="options">
+            ${q.option.map((opt,i)=>{
+                const label=['A','B','C','D'][i];
+                return `<div class="${q.correct===label?'correct':''}">${label}) ${opt}</div>`;
+            }).join('')}
+            </div>
+            <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>`;
+        container.appendChild(div);
     });
-  });
 }
 
-// Measure element height dynamically
-function measureHeight(el){
-  el.style.visibility="hidden"; document.body.appendChild(el);
-  const h=el.offsetHeight+4; // margin
-  document.body.removeChild(el); el.style.visibility="visible";
-  return h;
+// Delete question
+function deleteQuestion(idx){
+    if(confirm('আপনি কি সত্যিই এই প্রশ্ন মুছে ফেলতে চান?')){
+        questions.splice(idx,1);
+        renderQuestions();
+    }
 }
 
-// Create new page and columns
-function createNewPage(){
-  const page=document.createElement("div"); page.className="a4-page";
-  const colL=document.createElement("div"); colL.className="column";
-  const colR=document.createElement("div"); colR.className="column";
-  page.appendChild(colL); page.appendChild(colR);
-  document.getElementById("exam-paper").appendChild(page);
-  return {page,page,left:colL,right:colR};
-}
+// Initial render
+renderQuestions();
 
-/* Toolbar functions */
-function setExamTitle(){const t=prompt("Enter exam title:",examTitle);if(!t)return;examTitle=t;localStorage.setItem("examTitle",t);document.getElementById("exam-title").innerText=t;}
-function clearExam(){if(!confirm("Clear everything?"))return;localStorage.clear();sections=[];examTitle="DU Admission Test";document.getElementById("exam-title").innerText=examTitle;renderSections();}
-function openAddSectionModal(){
-  document.getElementById("sectionForm").reset(); document.getElementById("questionsContainer").innerHTML=""; addQuestionForm();
-  document.getElementById("sectionModal").style.display="block";
-  document.getElementById("saveSectionBtn").onclick=function(){
-    const name=document.getElementById("sectionName").value.trim();
-    const newPage=document.getElementById("newPage").checked;
-    const qdivs=document.querySelectorAll(".question-form");const arr=[];
-    qdivs.forEach(q=>{arr.push({text:q.querySelector(".q-text").value,options:Array.from(q.querySelectorAll(".option-input")).map(i=>i.value)});});
-    sections.push({name,newPage,questions:arr});
-    localStorage.setItem("sections",JSON.stringify(sections));
-    renderSections();closeSectionModal();
-  };
-}
-function closeSectionModal(){document.getElementById("sectionModal").style.display="none";}
-function addQuestionForm(){
-  const box=document.createElement("div");box.className="question-form mb-2";
-  box.innerHTML=`<input class="form-control q-text mb-1" placeholder="Question" required>
-  <div class="d-flex gap-2">
-  <input class="form-control option-input" placeholder="ক" required>
-  <input class="form-control option-input" placeholder="খ" required>
-  <input class="form-control option-input" placeholder="গ" required>
-  <input class="form-control option-input" placeholder="ঘ" required>
-  </div>`;
-  document.getElementById("questionsContainer").appendChild(box);
-}
-
-/* PDF Download */
-function downloadPDF(){const element=document.getElementById("exam-paper");html2pdf().set({margin:0.1,filename:examTitle+".pdf",image:{type:"jpeg",quality:1},html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4"}}).from(element).save();}
-
-/* JSON */
-function exportJSON(){const data={examTitle,sections};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="exam.json";a.click();}
-function importJSON(e){const file=e.target.files[0];const reader=new FileReader();reader.onload=function(evt){const data=JSON.parse(evt.target.result);examTitle=data.examTitle;sections=data.sections;localStorage.setItem("examTitle",examTitle);localStorage.setItem("sections",JSON.stringify(sections));document.getElementById("exam-title").innerText=examTitle;renderSections();alert("Import successful");};reader.readAsText(file);}
-
-renderSections();
+// Add new question
+document.getElementById('addBtn').addEventListener('click',()=>{
+    const text = document.getElementById('manualText').value.trim();
+    const optA = document.getElementById('optA').value.trim();
+    const optB = document.getElementById('optB').value.trim();
+    const optC = document.getElementById('optC').value.trim();
+    const optD = document.getElementById('optD').value.trim();
+    const correct = document.getElementById('correctOpt').value;
+    if(!text || !optA || !optB || !optC || !optD){ alert('সব ফিল্ড পূরণ করুন'); return; }
+    questions.push({text:text, option:[optA,optB,optC,optD], correct:correct});
+    renderQuestions();
+    document.getElementById('manualText').value='';
+    document.getElementById('optA').value='';
+    document.getElementById('optB').value='';
+    document.getElementById('optC').value='';
+    document.getElementById('optD').value='';
+});
 </script>
+
 </body>
 </html>
