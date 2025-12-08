@@ -115,6 +115,7 @@
     <tr>
       <th>SL.</th>
       <th>Topic</th>
+      <th>End Time</th>
       <th>Action</th>
     </tr>
   </table>
@@ -163,11 +164,10 @@ function loadData(){
   let saved = localStorage.getItem(STORE_KEY);
   let dateSaved = localStorage.getItem(DATE_KEY);
 
-  // তারিখ: localStorage আছে কি না চেক
+  // তারিখ
   if(dateSaved){
     document.getElementById("dateTitle").innerText = dateSaved;
   } else {
-    // আজকের তারিখ
     const today = new Date();
     document.getElementById("dateTitle").innerText = formatDateToBangla(today);
   }
@@ -175,13 +175,11 @@ function loadData(){
   // টপিক লিস্ট
   if(saved){
     let list = JSON.parse(saved);
-    list.forEach(t => addRow(t));
+    list.forEach(t => addRow(t.topic, t.endTime));
   } else {
     ["সমার্থক শব্দ","কারক","ইংরেজি সাহিত্য","Idioms and Phrase","অর্থনীতি জিকে"]
     .forEach(t => addRow(t));
   }
-
-  renumber();
 }
 
 /* --------------------------
@@ -191,7 +189,10 @@ function saveData(){
   let rows = document.querySelectorAll("#topicTable tr");
   let arr = [];
   for(let i=1;i<rows.length;i++){
-    arr.push(rows[i].children[1].innerText);
+    arr.push({
+      topic: rows[i].children[1].innerText,
+      endTime: rows[i].children[2].innerText
+    });
   }
   localStorage.setItem(STORE_KEY, JSON.stringify(arr));
 }
@@ -203,21 +204,26 @@ function saveDate(){
 /* --------------------------
    Table functions
 -------------------------- */
-function addRow(text){
+function addRow(text, endTime = "") {
   let table = document.getElementById('topicTable');
   let row = table.insertRow(-1);
 
   let num = row.insertCell(0);
   let topic = row.insertCell(1);
-  let action = row.insertCell(2);
+  let timeCell = row.insertCell(2);
+  let action = row.insertCell(3);
 
   num.classList.add("num");
   topic.innerText = text;
+  timeCell.innerText = endTime;
 
   action.innerHTML = `
     <button class="action-btn" onclick="editRow(this)">Edit</button>
+    <button class="action-btn" onclick="setTime(this)">Set Time</button>
     <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
   `;
+  renumber();
+  saveData();
 }
 
 function renumber(){
@@ -231,8 +237,6 @@ function addTopic(){
   let t = document.getElementById('topicInput').value.trim();
   if(t==="") return;
   addRow(t);
-  renumber();
-  saveData();
   document.getElementById('topicInput').value="";
 }
 
@@ -248,6 +252,16 @@ function editRow(btn){
   let updated = prompt("নতুন টপিক লিখুন:", current);
   if(updated && updated.trim()!==""){
     row.children[1].innerText = updated.trim();
+    saveData();
+  }
+}
+
+function setTime(btn){
+  let row = btn.parentNode.parentNode;
+  let current = row.children[2].innerText;
+  let updated = prompt("শেষ করার সময় লিখুন (যেমন: দুপুর ১২:০১):", current);
+  if(updated && updated.trim() !== ""){
+    row.children[2].innerText = updated.trim();
     saveData();
   }
 }
