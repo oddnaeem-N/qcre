@@ -2,59 +2,65 @@
 <html lang="bn">
 <head>
 <meta charset="utf-8">
-<title>file</title>
+<title>প্রশ্নপত্র</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100..900&display=swap" rel="stylesheet">
+
+<!-- Solaiman Lipi Font -->
 <style>
+@font-face {
+    font-family: 'SolaimanLipi';
+    src: url('https://cdn.jsdelivr.net/gh/medialab/solaiman-lipi-font/SolaimanLipi.ttf') format('truetype');
+}
 body {
-    font-family: 'Noto Sans Bengali', sans-serif;
+    font-family: 'SolaimanLipi', sans-serif;
     font-size: 18px;
-    margin:4px;
-    padding:4px;
-    color:#111;
+    margin: 4px;
+    padding: 4px;
+    color: #111;
 }
-h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
-.print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl {
-    display:inline-block;
-    margin:4px;
-}
+
+h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
+
+.print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl { display: inline-block; margin: 4px; }
 .print-btn, #saveJsonBtn, #loadJsonBtn { padding:6px 10px; background:#0078d7; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:16px; }
-@media print {
-    .print-btn, #addQuestion, .delete-btn, #headingControl, #saveJsonBtn, #loadJsonBtn { display:none !important; }
-}
+
 .questions {
-    column-count:2;
-    column-gap:5px;
-    margin:4px;
+    column-count: 2;  /* কলাম দুইটা */
+    column-gap: 5px;
+    margin: 4px;
 }
 .question {
-    margin-bottom:8px;
+    margin-bottom: 8px;
     page-break-inside: avoid;
-    font-weight:400;
-    position:relative;
+    font-weight: 400;
+    position: relative;
+    border: 1px solid #ccc;
+    padding: 6px;
 }
 .options {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:4px;
-    margin-left:6px;
-    font-weight:400;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-left: 6px;
+    font-weight: 400;
 }
-.correct { color:darkblue; font-weight:600; }
-.delete-btn {
-    position:absolute;
-    top:0;
-    right:0;
-    background:#e74c3c;
-    color:#fff;
-    border:none;
-    border-radius:3px;
-    padding:2px 6px;
-    cursor:pointer;
-    font-size:12px;
+.correct { color: darkblue; font-weight: 600; }
+
+.delete-btn, .edit-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 4px;
 }
+.edit-btn { background:#f39c12; right: 50px; }
+
 .footer { text-align:right; font-weight:700; margin-top:10px; }
 
 /* Add Question Form */
@@ -71,6 +77,30 @@ h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
 #headingControl { margin:10px 0; padding:10px; border:1px solid #ccc; }
 #headingControl input { width:100%; margin:3px 0; padding:4px; }
 #headingControl button { padding:6px 10px; margin-top:6px; cursor:pointer; }
+
+/* Print CSS */
+@media print {
+    /* সব কন্ট্রোল হাইড করুন */
+    .print-btn,
+    #addQuestion,
+    .delete-btn,
+    .edit-btn,
+    #headingControl,
+    #saveJsonBtn,
+    #loadJsonBtn {
+        display: none !important;
+    }
+
+    body { margin:0; padding:0; }
+    .questions { column-count: 2; column-gap:5px; margin:0; } /* প্রিন্টেও কলাম দুইটা থাকবে */
+    .question {
+        border: 1px solid #000;
+        padding: 8px;
+        margin: 4px 0;
+        page-break-inside: avoid;
+    }
+    .options div { font-weight: 600; }
+}
 </style>
 </head>
 <body>
@@ -143,6 +173,7 @@ function renderQuestions(){
                 return `<div class="${q.correct===['A','B','C','D'][i]?'correct':''}">${labels[i]}) ${opt}</div>`;
             }).join('')}
             </div>
+            <button class="edit-btn" onclick="editQuestion(${idx})">এডিট করুন</button>
             <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>`;
         container.appendChild(div);
     });
@@ -155,6 +186,21 @@ function deleteQuestion(idx){
         questions.splice(idx,1);
         renderQuestions();
     }
+}
+
+// Edit question
+function editQuestion(idx){
+    const q = questions[idx];
+    const text = prompt("প্রশ্ন সম্পাদনা করুন:", q.text);
+    if(text===null) return;
+    const optA = prompt("ক) অপশন:", q.option[0]); if(optA===null) return;
+    const optB = prompt("খ) অপশন:", q.option[1]); if(optB===null) return;
+    const optC = prompt("গ) অপশন:", q.option[2]); if(optC===null) return;
+    const optD = prompt("ঘ) অপশন:", q.option[3]); if(optD===null) return;
+    const correct = prompt("সঠিক উত্তর (A/B/C/D):", q.correct); if(correct===null) return;
+
+    questions[idx] = {text:text, option:[optA,optB,optC,optD], correct:correct.toUpperCase()};
+    renderQuestions();
 }
 
 // Add new question
