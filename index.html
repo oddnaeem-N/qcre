@@ -1,137 +1,179 @@
-<!DOCTYPE html>  
-<html lang="bn">  
-<head>  
-<meta charset="utf-8">  
-<title>ডিফল্ট</title>  
-<meta name="viewport" content="width=device-width, initial-scale=1.0">  
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">  
-<style>  
-body {  
-    font-family: 'Tiro Bangla', serif;  
-    font-size: 18px;  
-    margin:4px;  
-    padding:4px;  
-    color:#111;  
-}  
-h2 { text-align:center; margin:8px; font-size:24px; }  
-.print-btn {  
-    display:inline-block;  
-    padding:6px 10px;  
-    background:#0078d7;  
-    color:#fff;  
-    border:none;  
-    border-radius:3px;  
-    cursor:pointer;  
-    font-size:16px;  
-    margin:4px;  
-}  
-@media print {   
-    .print-btn, #addQuestion, .delete-btn, #headingControl {   
-        display:none !important;   
-    }   
-}  
-.questions {   
-    column-count:2;   
-    column-gap:5px;   
-    margin:4px;   
-}  
-.question {   
-    margin-bottom:8px;   
-    page-break-inside: avoid;   
-    font-weight:bold;   
-    position:relative;  
-}  
-.options {   
-    display:grid;   
-    grid-template-columns:1fr 1fr;   
-    gap:4px;   
-    margin-left:6px;   
-    font-weight:normal;  
-}  
-.correct { color:green; }  
-.delete-btn {  
-    position:absolute;  
-    top:0;  
-    right:0;  
-    background:#e74c3c;  
-    color:#fff;  
-    border:none;  
-    border-radius:3px;  
-    padding:2px 6px;  
-    cursor:pointer;  
-    font-size:12px;  
-}  
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>প্রশ্ন সেট</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
 
-#addQuestion {  
-    margin:10px 0;  
-    padding:10px;  
-    border:1px solid #ccc;  
-}  
-#addQuestion input, #addQuestion select { width:100%; margin:3px 0; padding:4px; }  
-#addQuestion label { font-weight:bold; }  
-#addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }  
+<style>
+body {
+    font-family: 'Tiro Bangla', serif;
+    font-size: 18px;
+    margin:4px;
+    padding:4px;
+    color:#111;
+}
+h2 { text-align:center; margin:8px; font-size:24px; }
 
-#headingControl { margin:10px 0; padding:10px; border:1px solid #ccc; }  
-#headingControl input { width:100%; margin:3px 0; padding:4px; }  
-#headingControl button { padding:6px 10px; margin-top:6px; cursor:pointer; }  
-</style>  
-</head>  
-<body>  
+.print-btn {
+    display:inline-block;
+    padding:6px 10px;
+    background:#0078d7;
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:16px;
+    margin:4px 4px 8px 0;
+}
 
-<!-- Heading Input Control -->  
-<div id="headingControl">  
-    <label>প্রিন্টের হেডিং:</label>  
-    <input type="text" id="headingInput" placeholder="হেডিং লিখুন" value="ঢাবি অবাণিজ্য ২৫-২৬ (আইসিটি)">  
-    <button onclick="updateHeading()">হেডিং সেট করুন</button>  
-</div>  
+@media print {
+    .print-btn,
+    #addQuestion,
+    .delete-btn,
+    #headingControl,
+    #importJsonBtn,
+    #exportJsonBtn,
+    #jsonFileInput {
+        display:none !important;
+    }
+}
+
+.questions {
+    column-count:2;
+    column-gap:5px;
+    margin:4px;
+}
+.question {
+    margin-bottom:8px;
+    page-break-inside: avoid;
+    font-weight:bold;
+    position:relative;
+}
+.options {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px;
+    margin-left:6px;
+    font-weight:normal;
+}
+.correct { color:green; }
+
+.delete-btn {
+    position:absolute;
+    top:0;
+    right:0;
+    background:#e74c3c;
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:2px 6px;
+    cursor:pointer;
+    font-size:12px;
+}
+
+/* Add Question Form */
+#addQuestion {
+    margin:10px 0;
+    padding:10px;
+    border:1px solid #ccc;
+}
+#addQuestion input, #addQuestion select {
+    width:100%;
+    margin:3px 0;
+    padding:4px;
+}
+#addQuestion label { font-weight:bold; }
+#addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }
+
+/* Heading control */
+#headingControl {
+    margin:10px 0;
+    padding:10px;
+    border:1px solid #ccc;
+}
+#headingControl input {
+    width:100%;
+    margin:3px 0;
+    padding:4px;
+}
+#headingControl button {
+    padding:6px 10px;
+    margin-top:6px;
+    cursor:pointer;
+}
+
+/* Hide Choose File input on screen */
+#jsonFileInput {
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Heading Input Control -->
+<div id="headingControl">
+    <label>প্রিন্টের হেডিং:</label>
+    <input type="text" id="headingInput" placeholder="হেডিং লিখুন">
+    <button onclick="updateHeading()">হেডিং সেট করুন</button>
+</div>
 
 <button class="print-btn" onclick="window.print()">🖨️ Print</button>
 
-<!-- JSON Buttons -->
-<button class="print-btn" onclick="exportJSON()">📤 Export JSON</button>
-<input type="file" id="jsonFileInput" accept=".json">
-<button class="print-btn" onclick="importJSON()">📥 Import JSON</button>
+<button class="print-btn" id="exportJsonBtn" onclick="exportJSON()">📤 Export JSON</button>
 
-<h2 id="mainHeading">ঢাবি অবাণিজ্য ২৫-২৬ (আইসিটি)</h2>  
+<button class="print-btn" id="importJsonBtn"
+        onclick="document.getElementById('jsonFileInput').click()">
+    📥 Import JSON
+</button>
 
-<!-- Add Question Form -->  
-<div id="addQuestion">  
-    <h3>নতুন প্রশ্ন এড করুন</h3>  
-    <label>প্রশ্ন:</label>  
-    <input type="text" id="manualText" placeholder="প্রশ্ন লিখুন" required>  
-    <label>A) অপশন:</label><input type="text" id="optA" required>  
-    <label>B) অপশন:</label><input type="text" id="optB" required>  
-    <label>C) অপশন:</label><input type="text" id="optC" required>  
-    <label>D) অপশন:</label><input type="text" id="optD" required>  
-    <label>সঠিক উত্তর:</label>  
-    <select id="correctOpt">  
-        <option value="A">A</option>  
-        <option value="B">B</option>  
-        <option value="C">C</option>  
-        <option value="D">D</option>  
-    </select>  
-    <button id="addBtn">এড করুন</button>  
-</div>  
+<input type="file" id="jsonFileInput" accept=".json" onchange="importJSON()">
 
-<div class="questions" id="questions"></div>  
+<h2 id="mainHeading"></h2>
 
-<script>  
-// কোনো প্রিসেট প্রশ্ন নেই
-let questions = [];  
+<!-- Add Question Form -->
+<div id="addQuestion">
+    <h3>নতুন প্রশ্ন এড করুন</h3>
 
-// বাংলা নাম্বার  
-function toBengaliNum(num){  
-    const bn=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];  
-    return num.toString().split('').map(d=>bn[d]||d).join('');  
-}  
+    <label>প্রশ্ন:</label>
+    <input type="text" id="manualText" placeholder="প্রশ্ন লিখুন" required>
 
-// LocalStorage থেকে লোড  
+    <label>A) অপশন:</label><input type="text" id="optA" required>
+    <label>B) অপশন:</label><input type="text" id="optB" required>
+    <label>C) অপশন:</label><input type="text" id="optC" required>
+    <label>D) অপশন:</label><input type="text" id="optD" required>
+
+    <label>সঠিক উত্তর:</label>
+    <select id="correctOpt">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+    </select>
+
+    <button id="addBtn">এড করুন</button>
+</div>
+
+<div class="questions" id="questions"></div>
+
+<script>
+// প্রশ্ন লিস্ট (শুরুতে খালি)
+let questions = [];
+
+// বাংলা নাম্বার
+function toBengaliNum(num){
+    const bn=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toString().split('').map(d=>bn[d]||d).join('');
+}
+
+// LocalStorage লোড
 window.addEventListener('load', () => {
     const savedQuestions = localStorage.getItem('questions');
     const savedHeading = localStorage.getItem('heading');
 
     if(savedQuestions) questions = JSON.parse(savedQuestions);
-
     if(savedHeading) {
         document.getElementById('mainHeading').innerText = savedHeading;
         document.getElementById('headingInput').value = savedHeading;
@@ -140,139 +182,115 @@ window.addEventListener('load', () => {
     renderQuestions();
 });
 
-// Render questions  
-function renderQuestions(){  
-    const container = document.getElementById('questions');  
-    container.innerHTML='';  
+// Render questions
+function renderQuestions(){
+    const container = document.getElementById('questions');
+    container.innerHTML='';
 
-    questions.forEach((q,idx)=>{  
-        const div = document.createElement('div');  
-        div.className='question';  
-        div.innerHTML=`${toBengaliNum(idx+1)}. ${q.text}  
-            <div class="options">  
-            ${q.option.map((opt,i)=>{  
-                const label=['A','B','C','D'][i];  
-                return `<div class="${q.correct===label?'correct':''}">${label}) ${opt}</div>`;  
-            }).join('')}  
-            </div>  
-            <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>`;  
-        container.appendChild(div);  
-    });  
+    questions.forEach((q,idx)=>{
+        const div = document.createElement('div');
+        div.className='question';
+        div.innerHTML=`
+            ${toBengaliNum(idx+1)}. ${q.text}
+            <div class="options">
+                ${q.option.map((opt,i)=>{
+                    const label=['A','B','C','D'][i];
+                    return `<div class="${q.correct===label?'correct':''}">
+                            ${label}) ${opt}</div>`;
+                }).join('')}
+            </div>
+            <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>
+        `;
+        container.appendChild(div);
+    });
 
     localStorage.setItem('questions', JSON.stringify(questions));
 }
 
-// Delete  
-function deleteQuestion(idx){  
-    if(confirm('আপনি কি সত্যিই এই প্রশ্ন মুছে ফেলতে চান?')){  
-        questions.splice(idx,1);  
-        renderQuestions();  
-    }  
-}  
+// Delete question
+function deleteQuestion(idx){
+    if(confirm('আপনি কি সত্যিই এই প্রশ্ন মুছে ফেলতে চান?')){
+        questions.splice(idx,1);
+        renderQuestions();
+    }
+}
 
-// Add  
-document.getElementById('addBtn').addEventListener('click',()=>{  
-    const text = document.getElementById('manualText').value.trim();  
-    const optA = document.getElementById('optA').value.trim();  
-    const optB = document.getElementById('optB').value.trim();  
-    const optC = document.getElementById('optC').value.trim();  
-    const optD = document.getElementById('optD').value.trim();  
-    const correct = document.getElementById('correctOpt').value;  
+// Add new question
+document.getElementById('addBtn').addEventListener('click',()=>{
+    const text = document.getElementById('manualText').value.trim();
+    const optA = document.getElementById('optA').value.trim();
+    const optB = document.getElementById('optB').value.trim();
+    const optC = document.getElementById('optC').value.trim();
+    const optD = document.getElementById('optD').value.trim();
+    const correct = document.getElementById('correctOpt').value;
 
-    if(!text || !optA || !optB || !optC || !optD){  
-        alert('সব ফিল্ড পূরণ করুন');  
-        return;  
-    }  
+    if(!text||!optA||!optB||!optC||!optD){
+        alert('সব ফিল্ড পূরণ করুন');
+        return;
+    }
 
-    questions.push({
-        text:text,
-        option:[optA,optB,optC,optD],
-        correct:correct
-    });  
+    questions.push({text:text, option:[optA,optB,optC,optD], correct:correct});
+    renderQuestions();
 
-    renderQuestions();  
+    document.getElementById('manualText').value='';
+    document.getElementById('optA').value='';
+    document.getElementById('optB').value='';
+    document.getElementById('optC').value='';
+    document.getElementById('optD').value='';
+});
 
-    document.getElementById('manualText').value='';  
-    document.getElementById('optA').value='';  
-    document.getElementById('optB').value='';  
-    document.getElementById('optC').value='';  
-    document.getElementById('optD').value='';  
-});  
-
-// Heading update  
-function updateHeading(){  
-    const h = document.getElementById('headingInput').value.trim();  
+// Update heading
+function updateHeading(){
+    const h = document.getElementById('headingInput').value.trim();
     if(h){
-        document.getElementById('mainHeading').innerText = h;  
+        document.getElementById('mainHeading').innerText = h;
         localStorage.setItem('heading', h);
     }
-}  
+}
 
-
-/* ======================================
-   JSON EXPORT
-====================================== */
-function exportJSON() {
+// Export JSON
+function exportJSON(){
     const data = {
         heading: document.getElementById('mainHeading').innerText,
         questions: questions
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "backup.json";
+    a.download = "questions_backup.json";
     a.click();
 
     URL.revokeObjectURL(url);
-    alert("JSON ব্যাকআপ ডাউনলোড হয়েছে!");
 }
 
-
-/* ======================================
-   JSON IMPORT
-====================================== */
-function importJSON() {
-    const fileInput = document.getElementById("jsonFileInput");
-    const file = fileInput.files[0];
-
-    if (!file) {
-        alert("একটা JSON ফাইল সিলেক্ট করুন!");
-        return;
-    }
+// Import JSON
+function importJSON(){
+    const file = document.getElementById('jsonFileInput').files[0];
+    if(!file) return;
 
     const reader = new FileReader();
-    reader.onload = function (e) {
-        try {
-            const data = JSON.parse(e.target.result);
+    reader.onload = e => {
+        const data = JSON.parse(e.target.result);
 
-            if (!Array.isArray(data.questions)) {
-                alert("ফাইলে সঠিক question ফরম্যাট নেই!");
-                return;
-            }
-
-            if (data.heading) {
-                document.getElementById('mainHeading').innerText = data.heading;
-                document.getElementById('headingInput').value = data.heading;
-                localStorage.setItem("heading", data.heading);
-            }
-
-            questions = data.questions;
-            localStorage.setItem("questions", JSON.stringify(questions));
-
-            renderQuestions();
-            alert("JSON থেকে ডাটা সফলভাবে লোড হয়েছে!");
-
-        } catch (err) {
-            alert("JSON ফাইল রিড করা যায়নি!");
+        if(data.heading){
+            document.getElementById('mainHeading').innerText = data.heading;
+            document.getElementById('headingInput').value = data.heading;
+            localStorage.setItem('heading', data.heading);
         }
-    };
 
+        if(data.questions){
+            questions = data.questions;
+            localStorage.setItem('questions', JSON.stringify(questions));
+        }
+
+        renderQuestions();
+    };
     reader.readAsText(file);
 }
-</script>  
+</script>
 
-</body>  
+</body>
 </html>
