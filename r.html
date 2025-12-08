@@ -25,22 +25,13 @@
   }
 
   /* Header */
-  .header{text-align:center;margin-bottom:20px;}
-  .circle{
-    width:60px; height:60px; border-radius:50%;
-    margin:0 auto;
-    background: radial-gradient(circle,#b6f2ee,#e7fffd 60%);
-  }
-  .line{
-    width:180px; height:3px;
-    background:#009a93;
-    margin:15px auto 0;
-    border-radius:3px;
+  .header{
+    text-align:center;
+    margin-bottom:20px;
   }
   .title{
     font-size:32px;
     font-weight:700;
-    margin-top:20px;
   }
 
   /* Table */
@@ -64,7 +55,7 @@
   }
   .num{font-weight:700;}
 
-  /* Buttons inside table (edit/delete) */
+  /* Buttons inside table */
   .action-btn{
     padding:4px 8px;
     font-size:14px;
@@ -75,11 +66,9 @@
     cursor:pointer;
     margin:0 2px;
   }
-  .delete-btn{
-    background:#d9534f;
-  }
+  .delete-btn{ background:#d9534f; }
 
-  /* Control panel (print hidden) */
+  /* Control panel */
   #controls{
     margin-top:20px;
     padding:10px;
@@ -118,9 +107,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div class="circle"></div>
-    <div class="line"></div>
-    <div class="title" id="dateTitle">০২ ডিসেম্বর ২০২৫</div>
+    <div class="title" id="dateTitle"></div>
   </div>
 
   <!-- TABLE -->
@@ -130,53 +117,13 @@
       <th>Topic</th>
       <th>Action</th>
     </tr>
-    <tr>
-      <td class="num">০১</td>
-      <td>সমার্থক শব্দ</td>
-      <td>
-        <button class="action-btn" onclick="editRow(this)">Edit</button>
-        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-      </td>
-    </tr>
-    <tr>
-      <td class="num">০২</td>
-      <td>কারক</td>
-      <td>
-        <button class="action-btn" onclick="editRow(this)">Edit</button>
-        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-      </td>
-    </tr>
-    <tr>
-      <td class="num">০৩</td>
-      <td>ইংরেজি সাহিত্য</td>
-      <td>
-        <button class="action-btn" onclick="editRow(this)">Edit</button>
-        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-      </td>
-    </tr>
-    <tr>
-      <td class="num">০৪</td>
-      <td>Idioms and Phrase</td>
-      <td>
-        <button class="action-btn" onclick="editRow(this)">Edit</button>
-        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-      </td>
-    </tr>
-    <tr>
-      <td class="num">০৫</td>
-      <td>অর্থনীতি জিকে</td>
-      <td>
-        <button class="action-btn" onclick="editRow(this)">Edit</button>
-        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-      </td>
-    </tr>
   </table>
 
   <!-- CONTROL AREA -->
   <div id="controls">
     <h3 style="margin:0 0 10px 0;">এডিট প্যানেল (প্রিন্ট হবে না)</h3>
 
-    <input id="dateInput" type="text" placeholder="তারিখ লিখুন... যেমন: ০২ ডিসেম্বর ২০২৫">
+    <input id="dateInput" type="text" placeholder="তারিখ লিখুন...">
     <button onclick="changeDate()">তারিখ পরিবর্তন</button>
 
     <br><br>
@@ -190,60 +137,131 @@
 </div>
 
 <script>
+const STORE_KEY = "topicPlanner_topics";
+const DATE_KEY = "topicPlanner_date";
 
-  const toBangla = n => n.toString().replace(/[0-9]/g, d=>"০১২৩৪৫৬৭৮৯"[d]);
+/* --------------------------
+   Number to Bangla
+-------------------------- */
+function toBangla(n) {
+  return n.toString().replace(/[0-9]/g, d => "০১২৩৪৫৬৭৮৯"[d]);
+}
 
-  function renumber(){
-    let rows = document.querySelectorAll("#topicTable tr");
-    for(let i=1;i<rows.length;i++){
-      rows[i].children[0].innerText = toBangla(i);
-    }
+/* --------------------------
+   Format date to Bangla
+-------------------------- */
+function formatDateToBangla(date){
+  const options = { day:'numeric', month:'long', year:'numeric' };
+  let formatted = new Intl.DateTimeFormat('bn-BD', options).format(date);
+  return formatted.replace(/\d/g, d => toBangla(d));
+}
+
+/* --------------------------
+   Load saved data
+-------------------------- */
+function loadData(){
+  let saved = localStorage.getItem(STORE_KEY);
+  let dateSaved = localStorage.getItem(DATE_KEY);
+
+  // তারিখ: localStorage আছে কি না চেক
+  if(dateSaved){
+    document.getElementById("dateTitle").innerText = dateSaved;
+  } else {
+    // আজকের তারিখ
+    const today = new Date();
+    document.getElementById("dateTitle").innerText = formatDateToBangla(today);
   }
 
-  function changeDate(){
-    let d = document.getElementById('dateInput').value.trim();
-    if(d.length>0){
-      document.getElementById('dateTitle').innerText = d;
-    }
+  // টপিক লিস্ট
+  if(saved){
+    let list = JSON.parse(saved);
+    list.forEach(t => addRow(t));
+  } else {
+    ["সমার্থক শব্দ","কারক","ইংরেজি সাহিত্য","Idioms and Phrase","অর্থনীতি জিকে"]
+    .forEach(t => addRow(t));
   }
 
-  function addTopic(){
-    let t = document.getElementById('topicInput').value.trim();
-    if(t==="") return;
+  renumber();
+}
 
-    let table = document.getElementById('topicTable');
-    let row = table.insertRow(-1);
-
-    let num = row.insertCell(0);
-    let topic = row.insertCell(1);
-    let action = row.insertCell(2);
-
-    num.classList.add("num");
-    topic.innerText = t;
-
-    action.innerHTML = `
-      <button class="action-btn" onclick="editRow(this)">Edit</button>
-      <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-    `;
-
-    renumber();
-    document.getElementById('topicInput').value = "";
+/* --------------------------
+   Save functions
+-------------------------- */
+function saveData(){
+  let rows = document.querySelectorAll("#topicTable tr");
+  let arr = [];
+  for(let i=1;i<rows.length;i++){
+    arr.push(rows[i].children[1].innerText);
   }
+  localStorage.setItem(STORE_KEY, JSON.stringify(arr));
+}
 
-  function deleteRow(btn){
-    let row = btn.parentNode.parentNode;
-    row.remove();
-    renumber();
-  }
+function saveDate(){
+  localStorage.setItem(DATE_KEY, document.getElementById("dateTitle").innerText);
+}
 
-  function editRow(btn){
-    let row = btn.parentNode.parentNode;
-    let current = row.children[1].innerText;
-    let updated = prompt("নতুন টপিক লিখুন:", current);
-    if(updated !== null && updated.trim()!==""){
-      row.children[1].innerText = updated.trim();
-    }
+/* --------------------------
+   Table functions
+-------------------------- */
+function addRow(text){
+  let table = document.getElementById('topicTable');
+  let row = table.insertRow(-1);
+
+  let num = row.insertCell(0);
+  let topic = row.insertCell(1);
+  let action = row.insertCell(2);
+
+  num.classList.add("num");
+  topic.innerText = text;
+
+  action.innerHTML = `
+    <button class="action-btn" onclick="editRow(this)">Edit</button>
+    <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+  `;
+}
+
+function renumber(){
+  let rows = document.querySelectorAll("#topicTable tr");
+  for(let i=1;i<rows.length;i++){
+    rows[i].children[0].innerText = toBangla(i);
   }
+}
+
+function addTopic(){
+  let t = document.getElementById('topicInput').value.trim();
+  if(t==="") return;
+  addRow(t);
+  renumber();
+  saveData();
+  document.getElementById('topicInput').value="";
+}
+
+function deleteRow(btn){
+  btn.parentNode.parentNode.remove();
+  renumber();
+  saveData();
+}
+
+function editRow(btn){
+  let row = btn.parentNode.parentNode;
+  let current = row.children[1].innerText;
+  let updated = prompt("নতুন টপিক লিখুন:", current);
+  if(updated && updated.trim()!==""){
+    row.children[1].innerText = updated.trim();
+    saveData();
+  }
+}
+
+function changeDate(){
+  let d = document.getElementById('dateInput').value.trim();
+  if(d.length>0){
+    document.getElementById('dateTitle').innerText = d;
+    saveDate();
+  }
+}
+
+// INIT
+loadData();
 
 </script>
 
