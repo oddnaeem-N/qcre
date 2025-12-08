@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Topic Planner</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap" rel="stylesheet">
+
+<style>
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    padding:0;
+    font-family:'Tiro Bangla', sans-serif;
+    color:#0b6e6a;
+    background:#fff;
+  }
+
+  .page{
+    width:100%;
+    max-width:780px;
+    margin:0 auto;
+    padding:10mm 5mm;
+  }
+
+  /* Header */
+  .header{text-align:center;margin-bottom:20px;}
+  .circle{
+    width:60px; height:60px; border-radius:50%;
+    margin:0 auto;
+    background: radial-gradient(circle,#b6f2ee,#e7fffd 60%);
+  }
+  .line{
+    width:180px; height:3px;
+    background:#009a93;
+    margin:15px auto 0;
+    border-radius:3px;
+  }
+  .title{
+    font-size:32px;
+    font-weight:700;
+    margin-top:20px;
+  }
+
+  /* Table */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+    font-size:22px;
+  }
+  th{
+    background:#f29300;
+    color:#fff;
+    padding:12px;
+    border:2px solid #009a93;
+  }
+  td{
+    padding:15px;
+    border:2px solid #009a93;
+    text-align:center;
+    color:#009a93;
+  }
+  .num{font-weight:700;}
+
+  /* Buttons inside table (edit/delete) */
+  .action-btn{
+    padding:4px 8px;
+    font-size:14px;
+    background:#009a93;
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+    margin:0 2px;
+  }
+  .delete-btn{
+    background:#d9534f;
+  }
+
+  /* Control panel (print hidden) */
+  #controls{
+    margin-top:20px;
+    padding:10px;
+    background:#ecfffd;
+    border:1px solid #c7f4f0;
+    border-radius:6px;
+  }
+  #controls input{
+    padding:6px 8px;
+    border:1px solid #009a93;
+    border-radius:5px;
+    margin-right:6px;
+  }
+  #controls button{
+    padding:6px 10px;
+    background:#009a93;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    margin-right:5px;
+  }
+
+  /* Print rules — hide all buttons */
+  @media print {
+    #controls { display:none !important; }
+    .action-btn { display:none !important; }
+    body{ margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .page{ margin:0; padding:8mm 5mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="circle"></div>
+    <div class="line"></div>
+    <div class="title" id="dateTitle">০২ ডিসেম্বর ২০২৫</div>
+  </div>
+
+  <!-- TABLE -->
+  <table id="topicTable">
+    <tr>
+      <th>SL.</th>
+      <th>Topic</th>
+      <th>Action</th>
+    </tr>
+    <tr>
+      <td class="num">০১</td>
+      <td>সমার্থক শব্দ</td>
+      <td>
+        <button class="action-btn" onclick="editRow(this)">Edit</button>
+        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="num">০২</td>
+      <td>কারক</td>
+      <td>
+        <button class="action-btn" onclick="editRow(this)">Edit</button>
+        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="num">০৩</td>
+      <td>ইংরেজি সাহিত্য</td>
+      <td>
+        <button class="action-btn" onclick="editRow(this)">Edit</button>
+        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="num">০৪</td>
+      <td>Idioms and Phrase</td>
+      <td>
+        <button class="action-btn" onclick="editRow(this)">Edit</button>
+        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="num">০৫</td>
+      <td>অর্থনীতি জিকে</td>
+      <td>
+        <button class="action-btn" onclick="editRow(this)">Edit</button>
+        <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+      </td>
+    </tr>
+  </table>
+
+  <!-- CONTROL AREA -->
+  <div id="controls">
+    <h3 style="margin:0 0 10px 0;">এডিট প্যানেল (প্রিন্ট হবে না)</h3>
+
+    <input id="dateInput" type="text" placeholder="তারিখ লিখুন... যেমন: ০২ ডিসেম্বর ২০২৫">
+    <button onclick="changeDate()">তারিখ পরিবর্তন</button>
+
+    <br><br>
+    <input id="topicInput" type="text" placeholder="নতুন টপিক লিখুন">
+    <button onclick="addTopic()">টপিক যোগ করুন</button>
+
+    <br><br>
+    <button onclick="window.print()">প্রিন্ট</button>
+  </div>
+
+</div>
+
+<script>
+
+  const toBangla = n => n.toString().replace(/[0-9]/g, d=>"০১২৩৪৫৬৭৮৯"[d]);
+
+  function renumber(){
+    let rows = document.querySelectorAll("#topicTable tr");
+    for(let i=1;i<rows.length;i++){
+      rows[i].children[0].innerText = toBangla(i);
+    }
+  }
+
+  function changeDate(){
+    let d = document.getElementById('dateInput').value.trim();
+    if(d.length>0){
+      document.getElementById('dateTitle').innerText = d;
+    }
+  }
+
+  function addTopic(){
+    let t = document.getElementById('topicInput').value.trim();
+    if(t==="") return;
+
+    let table = document.getElementById('topicTable');
+    let row = table.insertRow(-1);
+
+    let num = row.insertCell(0);
+    let topic = row.insertCell(1);
+    let action = row.insertCell(2);
+
+    num.classList.add("num");
+    topic.innerText = t;
+
+    action.innerHTML = `
+      <button class="action-btn" onclick="editRow(this)">Edit</button>
+      <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+    `;
+
+    renumber();
+    document.getElementById('topicInput').value = "";
+  }
+
+  function deleteRow(btn){
+    let row = btn.parentNode.parentNode;
+    row.remove();
+    renumber();
+  }
+
+  function editRow(btn){
+    let row = btn.parentNode.parentNode;
+    let current = row.children[1].innerText;
+    let updated = prompt("নতুন টপিক লিখুন:", current);
+    if(updated !== null && updated.trim()!==""){
+      row.children[1].innerText = updated.trim();
+    }
+  }
+
+</script>
+
+</body>
+</html>
