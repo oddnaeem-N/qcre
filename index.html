@@ -5,20 +5,18 @@
 <title>প্রশ্নপত্র</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Solaiman Lipi Font -->
 <style>
 @font-face {
     font-family: 'SolaimanLipi';
     src: url('https://cdn.jsdelivr.net/gh/medialab/solaiman-lipi-font/SolaimanLipi.ttf') format('truetype');
 }
 body { font-family: 'SolaimanLipi', sans-serif; font-size:18px; margin:4px; padding:4px; color:#111; }
-
 h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
 
 .print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl, #fontControl { display:inline-block; margin:4px; }
-.print-btn, #saveJsonBtn, #loadJsonBtn, #pushToServerBtn { padding:6px 10px; border:none; border-radius:3px; cursor:pointer; font-size:16px; color:#fff; }
-
-.print-btn, #saveJsonBtn, #loadJsonBtn { background:#0078d7; }
-#pushToServerBtn { background:#28a745; }
+.print-btn, #saveJsonBtn, #loadJsonBtn { padding:6px 10px; background:#0078d7; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:16px; }
+#pushToServerBtn { padding:6px 10px; background:#28a745; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:16px; margin-left:4px; }
 
 .questions { column-count:2; column-gap:5px; margin:4px; }
 .question { margin-bottom:8px; page-break-inside:avoid; font-weight:bold; position:relative; border:1px solid #ccc; padding:6px; }
@@ -26,6 +24,7 @@ h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
 .correct { color: darkblue; font-weight:bold; }
 .delete-btn, .edit-btn { position:absolute; top:0; right:0; background:#e74c3c; color:#fff; border:none; border-radius:3px; padding:2px 6px; cursor:pointer; font-size:12px; margin-left:4px; }
 .edit-btn { background:#f39c12; right:50px; }
+
 #addQuestion, #headingControl, #fontControl { margin:10px 0; padding:10px; border:1px solid #ccc; }
 #addQuestion input, #addQuestion select, #headingControl input, #fontControl input, #fontControl select { width:100%; margin:3px 0; padding:4px; }
 #addQuestion button, #headingControl button, #fontControl button { padding:6px 10px; margin-top:6px; cursor:pointer; }
@@ -41,12 +40,14 @@ h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
 </head>
 <body>
 
+<!-- Heading Input Control -->
 <div id="headingControl">
     <label>প্রিন্টের হেডিং:</label>
     <input type="text" id="headingInput" placeholder="হেডিং লিখুন" value="আমার প্রশ্নপত্র">
     <button onclick="updateHeading()">হেডিং সেট করুন</button>
 </div>
 
+<!-- Font Control -->
 <div id="fontControl">
     <label>প্রশ্নের ফন্ট সাইজ:</label>
     <input type="number" id="questionFontSize" value="18" min="10" max="36"> px
@@ -69,6 +70,7 @@ h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
 
 <u><h2 id="mainHeading">আমার প্রশ্নপত্র</h2></u>
 
+<!-- Add Question Form -->
 <div id="addQuestion">
     <h3>নতুন প্রশ্ন এড করুন</h3>
     <label>প্রশ্ন:</label><input type="text" id="manualText" required>
@@ -89,9 +91,12 @@ h2 { text-align:center; margin:8px; font-size:24px; font-weight:400; }
 <div class="questions" id="questions"></div>
 
 <script>
+// বাংলা নাম্বার
 function toBengaliNum(num){const bn=['০','১','২','৩','৪','৫','৬','৭','৮','৯']; return num.toString().split('').map(d=>bn[d]||d).join('');}
+
 let questions = [];
 
+// load from localStorage & server
 window.addEventListener('load', () => {
     const savedQuestions = localStorage.getItem('questions');
     const savedHeading = localStorage.getItem('heading');
@@ -99,15 +104,17 @@ window.addEventListener('load', () => {
     if(savedHeading){ document.getElementById('mainHeading').innerText = savedHeading; document.getElementById('headingInput').value = savedHeading; }
     renderQuestions();
 
-    fetch('/data.json')
-        .then(res => res.json())
-        .then(data => {
+    // Load from server
+    fetch('https://oddnaeem.pythonanywhere.com/data.json')
+        .then(res=>res.json())
+        .then(data=>{
             if(data.heading){ document.getElementById('mainHeading').innerText=data.heading; document.getElementById('headingInput').value=data.heading; }
             if(data.questions){ questions=data.questions; renderQuestions(); }
         })
-        .catch(err => console.log('Server JSON load failed:', err));
+        .catch(err=>console.log('Server JSON load failed:', err));
 });
 
+// render questions
 function renderQuestions(){
     const container=document.getElementById('questions'); container.innerHTML='';
     const qSize=document.getElementById('questionFontSize').value+"px";
@@ -123,9 +130,9 @@ function renderQuestions(){
     localStorage.setItem('questions', JSON.stringify(questions));
 }
 
+// delete/edit/add
 function deleteQuestion(idx){if(confirm('আপনি কি সত্যিই এই প্রশ্ন মুছে ফেলতে চান?')){questions.splice(idx,1); renderQuestions();}}
-function editQuestion(idx){const q=questions[idx]; const text=prompt("প্রশ্ন সম্পাদনা করুন:",q.text); if(text===null) return; const optA=prompt("ক) অপশন:",q.option[0]); if(optA===null) return; const optB=prompt("খ) অপশন:",q.option[1]); if(optB===null) return; const optC=prompt("গ) অপশন:",q.option[2]); if(optC===null) return; const optD=prompt("ঘ) অপশন:",q.option[3]); if(optD===null) return; const correct=prompt("সঠিক উত্তর (A/B/C/D):",q.correct); if(correct===null) return; questions[idx]={text:text, option:[optA,optB,optC,optD], correct:correct.toUpperCase()}; renderQuestions();}
-
+function editQuestion(idx){const q=questions[idx]; const text=prompt("প্রশ্ন সম্পাদনা করুন:",q.text); if(text===null)return; const optA=prompt("ক) অপশন:",q.option[0]); if(optA===null)return; const optB=prompt("খ) অপশন:",q.option[1]); if(optB===null)return; const optC=prompt("গ) অপশন:",q.option[2]); if(optC===null)return; const optD=prompt("ঘ) অপশন:",q.option[3]); if(optD===null)return; const correct=prompt("সঠিক উত্তর (A/B/C/D):",q.correct); if(correct===null)return; questions[idx]={text:text,option:[optA,optB,optC,optD],correct:correct.toUpperCase()}; renderQuestions();}
 document.getElementById('addBtn').addEventListener('click',()=>{
     const text=document.getElementById('manualText').value.trim();
     const optA=document.getElementById('optA').value.trim();
@@ -134,41 +141,38 @@ document.getElementById('addBtn').addEventListener('click',()=>{
     const optD=document.getElementById('optD').value.trim();
     const correct=document.getElementById('correctOpt').value;
     if(!text||!optA||!optB||!optC||!optD){alert('সব ফিল্ড পূরণ করুন'); return;}
-    questions.push({text:text, option:[optA,optB,optC,optD], correct:correct}); renderQuestions();
+    questions.push({text:text,option:[optA,optB,optC,optD],correct:correct}); renderQuestions();
     document.getElementById('manualText').value=''; document.getElementById('optA').value=''; document.getElementById('optB').value=''; document.getElementById('optC').value=''; document.getElementById('optD').value='';
 });
 
-function updateHeading(){ const h=document.getElementById('headingInput').value.trim(); if(h){ document.getElementById('mainHeading').innerText=h; localStorage.setItem('heading',h); }}
-function applyFontSettings(){ renderQuestions(); }
+// heading/font
+function updateHeading(){const h=document.getElementById('headingInput').value.trim(); if(h){document.getElementById('mainHeading').innerText=h; localStorage.setItem('heading',h);}}
+function applyFontSettings(){renderQuestions();}
 
-document.getElementById('saveJsonBtn').addEventListener('click', ()=>{
+// save/load local JSON
+document.getElementById('saveJsonBtn').addEventListener('click',()=>{
     const dataStr=JSON.stringify({heading:document.getElementById('mainHeading').innerText,questions:questions},null,2);
     const blob=new Blob([dataStr],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download="questions.json"; a.click(); URL.revokeObjectURL(url);
 });
-
 document.getElementById('loadJsonBtn').addEventListener('change',(e)=>{
-    const file=e.target.files[0]; if(!file) return;
+    const file=e.target.files[0]; if(!file)return;
     const reader=new FileReader();
     reader.onload=function(event){
-        try{ const data=JSON.parse(event.target.result);
-        if(data.heading) document.getElementById('mainHeading').innerText=data.heading;
-        if(data.questions) questions=data.questions;
-        renderQuestions();
-        }catch(err){alert("সঠিক JSON ফাইল নয়");}
+        try{ const data=JSON.parse(event.target.result); if(data.heading)document.getElementById('mainHeading').innerText=data.heading; if(data.questions)questions=data.questions; renderQuestions(); }catch(err){alert("সঠিক JSON ফাইল নয়");}
     }
     reader.readAsText(file);
 });
 
+// ⭐ push to server
 function pushToServer(){
-    const payload={heading:document.getElementById('mainHeading').innerText, questions:questions};
-    fetch("/upload",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)})
+    const payload={heading:document.getElementById('mainHeading').innerText,questions:questions};
+    fetch("https://oddnaeem.pythonanywhere.com/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
     .then(res=>res.json()).then(r=>{ alert("সফলভাবে সার্ভারে পাঠানো হয়েছে!"); console.log(r); })
     .catch(err=>{ alert("সার্ভারে পাঠাতে সমস্যা হয়েছে"); console.error(err); });
 }
-
-document.getElementById('pushToServerBtn').addEventListener('click', pushToServer);
+document.getElementById('pushToServerBtn').addEventListener('click',pushToServer);
 </script>
 
 </body>
