@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="utf-8">
-<title>প্রশ্নপত্র</title>
+<title>PRINTEE</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Solaiman Lipi Font -->
@@ -62,8 +62,6 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 }
 .edit-btn { background:#f39c12; right: 50px; }
 
-.footer { text-align:right; font-weight:700; margin-top:10px; }
-
 /* Add Question Form */
 #addQuestion {
     margin:10px 0;
@@ -74,15 +72,27 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 #addQuestion label { font-weight:500; }
 #addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }
 
-/* Heading control */
-#headingControl { margin:10px 0; padding:10px; border:1px solid #ccc; }
-#headingControl input { width:100%; margin:3px 0; padding:4px; }
-#headingControl button { padding:6px 10px; margin-top:6px; cursor:pointer; }
+/* Pagination */
+#pagination {
+    text-align: center;
+    margin: 10px 0;
+}
+#pagination button {
+    padding: 6px 12px;
+    margin: 4px;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
 
-/* Font control */
-#fontControl { margin:10px 0; padding:10px; border:1px solid #ccc; }
-#fontControl label { display:block; margin:3px 0; font-weight:500; }
-#fontControl input, #fontControl select { margin:3px 0; padding:4px; }
+/* MOBILE VIEW — NEW */
+@media (max-width: 600px) {
+    .questions {
+        column-count: 1 !important;
+    }
+}
 
 /* Print CSS */
 @media print {
@@ -93,19 +103,19 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
     #headingControl,
     #fontControl,
     #saveJsonBtn,
-    #loadJsonBtn {
+    #loadJsonBtn,
+    #pagination {
         display: none !important;
     }
 
     body { margin:0; padding:0; }
-    .questions { column-count: 2; column-gap:5px; margin:0; }
+    .questions { column-count: 2 !important; column-gap:5px; margin:0; }
     .question {
         border: 1px solid #000;
         padding: 8px;
         margin: 4px 0;
         page-break-inside: avoid;
     }
-    .options div { font-weight: normal; }
 }
 </style>
 </head>
@@ -113,15 +123,15 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
 <div id="headingControl">
     <label>প্রিন্টের হেডিং:</label>
-    <input type="text" id="headingInput" placeholder="হেডিং লিখুন" value="আমার প্রশ্নপত্র">
+    <input type="text" id="headingInput" value="আমার প্রশ্নপত্র">
     <button onclick="updateHeading()">হেডিং সেট করুন</button>
 </div>
 
 <div id="fontControl">
     <label>প্রশ্নের ফন্ট সাইজ:</label>
-    <input type="number" id="questionFontSize" value="18" min="10" max="36"> px
+    <input type="number" id="questionFontSize" value="18"> px
     <label>অপশনের ফন্ট সাইজ:</label>
-    <input type="number" id="optionFontSize" value="16" min="10" max="36"> px
+    <input type="number" id="optionFontSize" value="16"> px
     <label>ফন্ট ফ্যামিলি:</label>
     <select id="fontFamilySelect">
         <option value="SolaimanLipi">Solaiman Lipi</option>
@@ -141,11 +151,11 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 <div id="addQuestion">
     <h3>নতুন প্রশ্ন এড করুন</h3>
     <label>প্রশ্ন:</label>
-    <input type="text" id="manualText" placeholder="প্রশ্ন লিখুন" required>
-    <label>ক) অপশন:</label><input type="text" id="optA" required>
-    <label>খ) অপশন:</label><input type="text" id="optB" required>
-    <label>গ) অপশন:</label><input type="text" id="optC" required>
-    <label>ঘ) অপশন:</label><input type="text" id="optD" required>
+    <input type="text" id="manualText">
+    <label>ক) অপশন:</label><input type="text" id="optA">
+    <label>খ) অপশন:</label><input type="text" id="optB">
+    <label>গ) অপশন:</label><input type="text" id="optC">
+    <label>ঘ) অপশন:</label><input type="text" id="optD">
     <label>সঠিক উত্তর:</label>
     <select id="correctOpt">
         <option value="A">ক</option>
@@ -158,83 +168,132 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
 <div class="questions" id="questions"></div>
 
+<div id="pagination">
+    <button onclick="prevPage()">⬅ প্রিভিয়াস</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()">নেক্সট ➡</button>
+</div>
+
 <script>
+
 function toBengaliNum(num){
     const bn=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
     return num.toString().split('').map(d=>bn[d]||d).join('');
 }
 
-// LocalStorage load
-let questions=[];
+let currentPage = 1;
+const perPage = 10;
+let questions = [];
+
+// LOAD FROM LOCALSTORAGE
 window.addEventListener('load', () => {
     const savedQuestions = localStorage.getItem('questions');
     const savedHeading = localStorage.getItem('heading');
     if(savedQuestions) questions = JSON.parse(savedQuestions);
-    if(savedHeading) {
+    if(savedHeading){
         document.getElementById('mainHeading').innerText = savedHeading;
         document.getElementById('headingInput').value = savedHeading;
     }
     renderQuestions();
 });
 
-function renderQuestions(){
+/* --- CHANGE #1: renderQuestions now supports showAll flag --- */
+function renderQuestions(showAll = false){
     const container = document.getElementById('questions');
     container.innerHTML='';
+
     const qSize = document.getElementById('questionFontSize').value + "px";
     const oSize = document.getElementById('optionFontSize').value + "px";
     const fontFam = document.getElementById('fontFamilySelect').value;
 
-    questions.forEach((q,idx)=>{
-        const div = document.createElement('div');
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+
+    const display = showAll ? questions : questions.slice(start, end);
+
+    display.forEach((q,realIdx)=>{
+        const idx = showAll ? realIdx : start + realIdx;
+
+        const div=document.createElement('div');
         div.className='question';
-        div.style.fontSize = qSize;
-        div.style.fontFamily = fontFam;
+        div.style.fontSize=qSize;
+        div.style.fontFamily=fontFam;
 
         const labels=['ক','খ','গ','ঘ'];
-        div.innerHTML=`${toBengaliNum(idx+1)}. ${q.text}
+
+        div.innerHTML = `${toBengaliNum(idx+1)}. ${q.text}
             <div class="options" style="font-size:${oSize}; font-family:${fontFam};">
             ${q.option.map((opt,i)=>{
-                return `<div class="${q.correct===['A','B','C','D'][i]?'correct':''}">${labels[i]}) ${opt}</div>`;
+                return `<div class="${q.correct===['A','B','C','D'][i]?'correct':''}">
+                ${labels[i]}) ${opt}</div>`;
             }).join('')}
             </div>
             <button class="edit-btn" onclick="editQuestion(${idx})">এডিট করুন</button>
             <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>`;
+
         container.appendChild(div);
     });
+
+    document.getElementById('pageInfo').innerText =
+        `পৃষ্ঠা ${toBengaliNum(currentPage)} / ${toBengaliNum(Math.ceil(questions.length/perPage))}`;
+
     localStorage.setItem('questions', JSON.stringify(questions));
+}
+
+function prevPage(){
+    if(currentPage>1){
+        currentPage--;
+        renderQuestions();
+    }
+}
+
+function nextPage(){
+    if(currentPage < Math.ceil(questions.length/perPage)){
+        currentPage++;
+        renderQuestions();
+    }
 }
 
 function deleteQuestion(idx){
     if(confirm('আপনি কি সত্যিই এই প্রশ্ন মুছে ফেলতে চান?')){
         questions.splice(idx,1);
+        if(currentPage > Math.ceil(questions.length/perPage)){
+            currentPage--;
+        }
         renderQuestions();
     }
 }
 
 function editQuestion(idx){
-    const q = questions[idx];
-    const text = prompt("প্রশ্ন সম্পাদনা করুন:", q.text);
+    const q=questions[idx];
+    const text=prompt("প্রশ্ন সম্পাদনা করুন:", q.text);
     if(text===null) return;
-    const optA = prompt("ক) অপশন:", q.option[0]); if(optA===null) return;
-    const optB = prompt("খ) অপশন:", q.option[1]); if(optB===null) return;
-    const optC = prompt("গ) অপশন:", q.option[2]); if(optC===null) return;
-    const optD = prompt("ঘ) অপশন:", q.option[3]); if(optD===null) return;
-    const correct = prompt("সঠিক উত্তর (A/B/C/D):", q.correct); if(correct===null) return;
+    const optA=prompt("ক) অপশন:", q.option[0]); if(optA===null) return;
+    const optB=prompt("খ) অপশন:", q.option[1]); if(optB===null) return;
+    const optC=prompt("গ) অপশন:", q.option[2]); if(optC===null) return;
+    const optD=prompt("ঘ) অপশন:", q.option[3]); if(optD===null) return;
+    const correct=prompt("সঠিক উত্তর (A/B/C/D):", q.correct); if(correct===null) return;
 
-    questions[idx] = {text:text, option:[optA,optB,optC,optD], correct:correct.toUpperCase()};
+    questions[idx]={text:text, option:[optA,optB,optC,optD], correct:correct.toUpperCase()};
     renderQuestions();
 }
 
 document.getElementById('addBtn').addEventListener('click',()=>{
-    const text = document.getElementById('manualText').value.trim();
-    const optA = document.getElementById('optA').value.trim();
-    const optB = document.getElementById('optB').value.trim();
-    const optC = document.getElementById('optC').value.trim();
-    const optD = document.getElementById('optD').value.trim();
-    const correct = document.getElementById('correctOpt').value;
-    if(!text || !optA || !optB || !optC || !optD){ alert('সব ফিল্ড পূরণ করুন'); return; }
+    const text=document.getElementById('manualText').value.trim();
+    const optA=document.getElementById('optA').value.trim();
+    const optB=document.getElementById('optB').value.trim();
+    const optC=document.getElementById('optC').value.trim();
+    const optD=document.getElementById('optD').value.trim();
+    const correct=document.getElementById('correctOpt').value;
+
+    if(!text||!optA||!optB||!optC||!optD){
+        alert("সব ফিল্ড পূরণ করুন");
+        return;
+    }
+
     questions.push({text:text, option:[optA,optB,optC,optD], correct:correct});
     renderQuestions();
+
     document.getElementById('manualText').value='';
     document.getElementById('optA').value='';
     document.getElementById('optB').value='';
@@ -243,10 +302,10 @@ document.getElementById('addBtn').addEventListener('click',()=>{
 });
 
 function updateHeading(){
-    const h = document.getElementById('headingInput').value.trim();
+    const h=document.getElementById('headingInput').value.trim();
     if(h){
-        document.getElementById('mainHeading').innerText = h;
-        localStorage.setItem('heading', h);
+        document.getElementById('mainHeading').innerText=h;
+        localStorage.setItem('heading',h);
     }
 }
 
@@ -254,28 +313,34 @@ function applyFontSettings(){
     renderQuestions();
 }
 
-// Save JSON to file
-document.getElementById('saveJsonBtn').addEventListener('click', ()=>{
-    const dataStr = JSON.stringify({heading: document.getElementById('mainHeading').innerText, questions: questions}, null, 2);
-    const blob = new Blob([dataStr], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = "questions.json";
+// SAVE JSON
+document.getElementById('saveJsonBtn').addEventListener('click',()=>{
+    const dataStr=JSON.stringify({
+        heading:document.getElementById('mainHeading').innerText,
+        questions:questions
+    },null,2);
+
+    const blob=new Blob([dataStr],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download="questions.json";
     a.click();
     URL.revokeObjectURL(url);
 });
 
-// Load JSON file
-document.getElementById('loadJsonBtn').addEventListener('change', (e)=>{
-    const file = e.target.files[0];
+// LOAD JSON
+document.getElementById('loadJsonBtn').addEventListener('change',e=>{
+    const file=e.target.files[0];
     if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(event){
+    const reader=new FileReader();
+
+    reader.onload=event=>{
         try{
-            const data = JSON.parse(event.target.result);
-            if(data.heading) document.getElementById('mainHeading').innerText = data.heading;
-            if(data.questions) questions = data.questions;
+            const data=JSON.parse(event.target.result);
+            if(data.heading) document.getElementById('mainHeading').innerText=data.heading;
+            if(data.questions) questions=data.questions;
+            currentPage=1;
             renderQuestions();
         }catch(err){
             alert("সঠিক JSON ফাইল নয়");
@@ -283,6 +348,12 @@ document.getElementById('loadJsonBtn').addEventListener('change', (e)=>{
     }
     reader.readAsText(file);
 });
+
+/* --- CHANGE #2: PRINT ALWAYS SHOWS ALL QUESTIONS --- */
+window.addEventListener("beforeprint", () => {
+    renderQuestions(true);  // showAll mode for print
+});
+
 </script>
 
 </body>
