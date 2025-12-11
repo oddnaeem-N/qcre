@@ -11,6 +11,7 @@
     font-family: 'SolaimanLipi';
     src: url('https://cdn.jsdelivr.net/gh/medialab/solaiman-lipi-font/SolaimanLipi.ttf') format('truetype');
 }
+
 body {
     font-family: 'SolaimanLipi', sans-serif;
     font-size: 18px;
@@ -21,14 +22,21 @@ body {
 
 h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
-.print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl, #fontControl { display: inline-block; margin: 4px; }
-.print-btn, #saveJsonBtn, #loadJsonBtn { padding:6px 10px; background:#0078d7; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:16px; }
+.print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl, #fontControl, #perPageControl { 
+    display: inline-block; 
+    margin: 4px; 
+}
+.print-btn, #saveJsonBtn, #loadJsonBtn {
+    padding:6px 10px; background:#0078d7; color:#fff;
+    border:none; border-radius:3px; cursor:pointer; font-size:16px;
+}
 
 .questions {
     column-count: 2;
     column-gap: 5px;
     margin: 4px;
 }
+
 .question {
     margin-bottom: 8px;
     page-break-inside: avoid;
@@ -37,17 +45,10 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
     border: 1px solid #ccc;
     padding: 6px;
 }
-.options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    margin-left: 6px;
-    font-weight: normal;
-}
 
-.correct { color: darkblue; font-weight: bold; }
-
+/* HIDDEN EDIT/DELETE BUTTON (DEFAULT) */
 .delete-btn, .edit-btn {
+    display: none;
     position: absolute;
     top: 0;
     right: 0;
@@ -62,71 +63,70 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 }
 .edit-btn { background:#f39c12; right: 50px; }
 
+/* WHEN QUESTION IS TAPPED → SHOW BUTTONS */
+.question.active .delete-btn,
+.question.active .edit-btn {
+    display: block;
+}
+
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-left: 6px;
+    font-weight: normal;
+}
+
+.correct { color: darkblue; font-weight: bold; }
+
 /* Add Question Form */
 #addQuestion {
-    margin:10px 0;
-    padding:10px;
-    border:1px solid #ccc;
+    margin:10px 0; padding:10px; border:1px solid #ccc;
 }
-#addQuestion input, #addQuestion select { width:100%; margin:3px 0; padding:4px; }
+#addQuestion input, #addQuestion select { 
+    width:100%; margin:3px 0; padding:4px; 
+}
 #addQuestion label { font-weight:500; }
 #addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }
 
 /* Pagination */
-#pagination {
-    text-align: center;
-    margin: 10px 0;
-}
+#pagination { text-align:center; margin: 10px 0; }
 #pagination button {
     padding: 6px 12px;
     margin: 4px;
     background: #444;
-    color: #fff;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
+    color:#fff;
+    border:none; border-radius:3px; cursor:pointer;
 }
 
-/* MOBILE VIEW — NEW */
+/* MOBILE VIEW */
 @media (max-width: 600px) {
-    .questions {
-        column-count: 1 !important;
-    }
+    .questions { column-count: 1 !important; }
 }
 
-/* Print CSS */
+/* Print mode */
 @media print {
-    .print-btn,
-    #addQuestion,
-    .delete-btn,
-    .edit-btn,
-    #headingControl,
-    #fontControl,
-    #saveJsonBtn,
-    #loadJsonBtn,
-    #pagination {
+    .print-btn, #addQuestion, .delete-btn, .edit-btn,
+    #headingControl, #fontControl, #saveJsonBtn, 
+    #loadJsonBtn, #pagination, #perPageControl {
         display: none !important;
     }
 
-    body { margin:0; padding:0; }
-    .questions { column-count: 2 !important; column-gap:5px; margin:0; }
-    .question {
-        border: 1px solid #000;
-        padding: 8px;
-        margin: 4px 0;
-        page-break-inside: avoid;
-    }
+    .questions { column-count: 2 !important; }
+    .question { border: 1px solid #000; padding:8px; margin: 4px 0; }
 }
 </style>
 </head>
 <body>
 
+<!-- HEADING CONTROL -->
 <div id="headingControl">
     <label>প্রিন্টের হেডিং:</label>
     <input type="text" id="headingInput" value="আমার প্রশ্নপত্র">
     <button onclick="updateHeading()">হেডিং সেট করুন</button>
 </div>
 
+<!-- FONT CONTROL -->
 <div id="fontControl">
     <label>প্রশ্নের ফন্ট সাইজ:</label>
     <input type="number" id="questionFontSize" value="18"> px
@@ -142,12 +142,20 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
     <button onclick="applyFontSettings()">Apply Font</button>
 </div>
 
+<!-- PER PAGE CONTROL -->
+<div id="perPageControl">
+    <label>প্রতি পেজে কয়টা প্রশ্ন দেখাবে:</label>
+    <input type="number" id="perPageInput" value="10" min="1" style="width:80px;">
+    <button onclick="updatePerPage()">Set</button>
+</div>
+
 <button class="print-btn" onclick="window.print()">🖨️ Print</button>
-<button id="saveJsonBtn">💾 JSON সেভ করুন</button>
+<button id="saveJsonBtn">💾 JSON সেভ</button>
 <input type="file" id="loadJsonBtn" accept=".json">
 
 <u><h2 id="mainHeading">আমার প্রশ্নপত্র</h2></u>
 
+<!-- ADD QUESTION FORM -->
 <div id="addQuestion">
     <h3>নতুন প্রশ্ন এড করুন</h3>
     <label>প্রশ্ন:</label>
@@ -182,22 +190,29 @@ function toBengaliNum(num){
 }
 
 let currentPage = 1;
-const perPage = 10;
+let perPage = 10;
 let questions = [];
 
-// LOAD FROM LOCALSTORAGE
+/* Load LocalStorage */
 window.addEventListener('load', () => {
     const savedQuestions = localStorage.getItem('questions');
     const savedHeading = localStorage.getItem('heading');
+    const savedPerPage = localStorage.getItem('perPage');
+
     if(savedQuestions) questions = JSON.parse(savedQuestions);
     if(savedHeading){
         document.getElementById('mainHeading').innerText = savedHeading;
         document.getElementById('headingInput').value = savedHeading;
     }
+    if(savedPerPage){
+        perPage = parseInt(savedPerPage);
+        document.getElementById('perPageInput').value = perPage;
+    }
+
     renderQuestions();
 });
 
-/* --- CHANGE #1: renderQuestions now supports showAll flag --- */
+/* RENDER QUESTIONS */
 function renderQuestions(showAll = false){
     const container = document.getElementById('questions');
     container.innerHTML='';
@@ -219,17 +234,25 @@ function renderQuestions(showAll = false){
         div.style.fontSize=qSize;
         div.style.fontFamily=fontFam;
 
-        const labels=['ক','খ','গ','ঘ'];
+        /* TAP → SHOW BUTTONS */
+        div.addEventListener("click", () => {
+            document.querySelectorAll(".question").forEach(el=>el.classList.remove("active"));
+            div.classList.add("active");
+        });
 
-        div.innerHTML = `${toBengaliNum(idx+1)}. ${q.text}
+        const labels=['ক','খ','গ','ঘ'];
+        div.innerHTML = `
+            ${toBengaliNum(idx+1)}. ${q.text}
             <div class="options" style="font-size:${oSize}; font-family:${fontFam};">
-            ${q.option.map((opt,i)=>{
-                return `<div class="${q.correct===['A','B','C','D'][i]?'correct':''}">
-                ${labels[i]}) ${opt}</div>`;
-            }).join('')}
+                ${q.option.map((opt,i)=>`
+                    <div class="${q.correct===['A','B','C','D'][i]?'correct':''}">
+                        ${labels[i]}) ${opt}
+                    </div>
+                `).join('')}
             </div>
-            <button class="edit-btn" onclick="editQuestion(${idx})">এডিট করুন</button>
-            <button class="delete-btn" onclick="deleteQuestion(${idx})">মুছে ফেলুন</button>`;
+            <button class="edit-btn" onclick="editQuestion(${idx})">এডিট</button>
+            <button class="delete-btn" onclick="deleteQuestion(${idx})">ডিলিট</button>
+        `;
 
         container.appendChild(div);
     });
@@ -240,44 +263,43 @@ function renderQuestions(showAll = false){
     localStorage.setItem('questions', JSON.stringify(questions));
 }
 
-function prevPage(){
-    if(currentPage>1){
-        currentPage--;
-        renderQuestions();
-    }
+/* Pagination Controls */
+function prevPage(){ if(currentPage>1){ currentPage--; renderQuestions(); } }
+function nextPage(){ if(currentPage < Math.ceil(questions.length/perPage)){ currentPage++; renderQuestions(); } }
+
+/* Update per page */
+function updatePerPage(){
+    perPage = Number(document.getElementById("perPageInput").value);
+    if(perPage < 1) perPage = 1;
+    localStorage.setItem("perPage", perPage);
+    currentPage = 1;
+    renderQuestions();
 }
 
-function nextPage(){
-    if(currentPage < Math.ceil(questions.length/perPage)){
-        currentPage++;
-        renderQuestions();
-    }
-}
-
+/* Delete */
 function deleteQuestion(idx){
-    if(confirm('আপনি কি সত্যিই এই প্রশ্ন মুছে ফেলতে চান?')){
+    if(confirm('আপনি কি সত্যিই ডিলিট করতে চান?')){
         questions.splice(idx,1);
-        if(currentPage > Math.ceil(questions.length/perPage)){
-            currentPage--;
-        }
         renderQuestions();
     }
 }
 
+/* Edit */
 function editQuestion(idx){
     const q=questions[idx];
-    const text=prompt("প্রশ্ন সম্পাদনা করুন:", q.text);
+    const text=prompt("প্রশ্ন:", q.text);
     if(text===null) return;
-    const optA=prompt("ক) অপশন:", q.option[0]); if(optA===null) return;
-    const optB=prompt("খ) অপশন:", q.option[1]); if(optB===null) return;
-    const optC=prompt("গ) অপশন:", q.option[2]); if(optC===null) return;
-    const optD=prompt("ঘ) অপশন:", q.option[3]); if(optD===null) return;
-    const correct=prompt("সঠিক উত্তর (A/B/C/D):", q.correct); if(correct===null) return;
+    const optA=prompt("ক:", q.option[0]); if(optA===null) return;
+    const optB=prompt("খ:", q.option[1]); if(optB===null) return;
+    const optC=prompt("গ:", q.option[2]); if(optC===null) return;
+    const optD=prompt("ঘ:", q.option[3]); if(optD===null) return;
+    const correct=prompt("সঠিক উত্তর (A/B/C/D):", q.correct);
 
     questions[idx]={text:text, option:[optA,optB,optC,optD], correct:correct.toUpperCase()};
     renderQuestions();
 }
 
+/* Add Question */
 document.getElementById('addBtn').addEventListener('click',()=>{
     const text=document.getElementById('manualText').value.trim();
     const optA=document.getElementById('optA').value.trim();
@@ -301,6 +323,7 @@ document.getElementById('addBtn').addEventListener('click',()=>{
     document.getElementById('optD').value='';
 });
 
+/* Set Heading */
 function updateHeading(){
     const h=document.getElementById('headingInput').value.trim();
     if(h){
@@ -309,11 +332,10 @@ function updateHeading(){
     }
 }
 
-function applyFontSettings(){
-    renderQuestions();
-}
+/* Apply Font */
+function applyFontSettings(){ renderQuestions(); }
 
-// SAVE JSON
+/* SAVE JSON */
 document.getElementById('saveJsonBtn').addEventListener('click',()=>{
     const dataStr=JSON.stringify({
         heading:document.getElementById('mainHeading').innerText,
@@ -329,7 +351,7 @@ document.getElementById('saveJsonBtn').addEventListener('click',()=>{
     URL.revokeObjectURL(url);
 });
 
-// LOAD JSON
+/* LOAD JSON */
 document.getElementById('loadJsonBtn').addEventListener('change',e=>{
     const file=e.target.files[0];
     if(!file) return;
@@ -343,15 +365,15 @@ document.getElementById('loadJsonBtn').addEventListener('change',e=>{
             currentPage=1;
             renderQuestions();
         }catch(err){
-            alert("সঠিক JSON ফাইল নয়");
+            alert("Invalid JSON!");
         }
     }
     reader.readAsText(file);
 });
 
-/* --- CHANGE #2: PRINT ALWAYS SHOWS ALL QUESTIONS --- */
+/* PRINT ALWAYS SHOWS ALL QUESTIONS */
 window.addEventListener("beforeprint", () => {
-    renderQuestions(true);  // showAll mode for print
+    renderQuestions(true);
 });
 
 </script>
