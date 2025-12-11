@@ -2,8 +2,8 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>MCQ Exam App</title>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MCQ Exam App (Range Only)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
     font-family: "SolaimanLipi", sans-serif;
@@ -14,55 +14,40 @@ body{
 h2{margin:0 0 15px; font-weight:600;}
 button{padding:10px 18px; background:#007bff; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:16px;}
 button:hover{background:#005fc7;}
-canvas{width:100%!important;}
 .question{ padding:12px; border:1px solid #ddd; margin-bottom:12px; border-radius:8px; background:#fff;}
 .option{border:1px solid #ccc; padding:8px; margin:6px 0; border-radius:5px; cursor:pointer;}
 .option.locked{pointer-events:none; opacity:.7;}
 .option.correct{background:#d6ffe2; border-color:#4CAF50;}
 .option.wrong{background:#ffe2e2; border-color:#ff4d4d;}
 .hidden{display:none;}
-.backBtn{background:#444!important;}
-.topWrong{border-left:4px solid #ff4d4d; padding:8px; margin:8px 0; font-size:16px;}
+.backBtn{background:#444!important; color:#fff;}
 </style>
 </head>
 <body>
 <div class="container">
 
-<!-- LANDING PAGE -->
 <div id="homePage" class="card">
-    <h2>📘 MCQ Exam System</h2>
-    <input type="file" id="jsonFile" accept=".json">
-    <button onclick="startExam()">Start Exam</button>
+    <h2>📘 MCQ Exam (Range Select)</h2>
+    <input type="file" id="jsonFile" accept=".json"><br><br>
 
-    <div id="statsArea" class="hidden" style="margin-top:20px;">
-        <h3>📊 আপনার পারফরম্যান্স</h3>
-        <canvas id="pieChart" height="200"></canvas>
-        <h3 style="margin-top:20px;">❌ সবচেয়ে বেশি ভুল ৫টি প্রশ্ন</h3>
-        <div id="topWrongList"></div>
-    </div>
+    <label>Start Question:</label>
+    <input type="number" id="startQ" value="1" min="1" style="width:60px;">
+    <label>End Question:</label>
+    <input type="number" id="endQ" value="24" min="1" style="width:60px;"><br><br>
+
+    <button onclick="startExam()">Start Exam</button>
 </div>
 
-<!-- EXAM PAGE -->
 <div id="examPage" class="card hidden">
     <h2>📝 Exam Started</h2>
     <div id="questionBox"></div>
-    <button onclick="finishExam()" style="margin-top:20px;">Submit</button>
-</div>
-
-<!-- RESULT PAGE -->
-<div id="resultPage" class="card hidden">
-    <h2>📑 Result</h2>
-    <div id="resultText"></div>
-    <button class="backBtn" onclick="goHome()">Back to Home</button>
+    <button class="backBtn" onclick="goHome()" style="margin-top:20px;">Back</button>
 </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-let master=[], selected=[], userAns={}, stats={};
-
-function stableHash(str){let h=0,i,chr;if(str.length===0) return "0";for(i=0;i<str.length;i++){chr=str.charCodeAt(i);h=(h<<5)-h+chr;h|=0;}return ("_"+Math.abs(h).toString(36));}
+let master=[], selected=[], userAns={};
 
 document.getElementById("jsonFile").addEventListener("change", e=>{
     const f=e.target.files[0];
@@ -71,81 +56,28 @@ document.getElementById("jsonFile").addEventListener("change", e=>{
     r.onload=ev=>{
         const data=JSON.parse(ev.target.result);
         master=data.questions;
-        stats=JSON.parse(localStorage.getItem("stats")||"{}");
-        alert("JSON Loaded!");
-        showStats();
+        alert("JSON Loaded! Total Questions: "+master.length);
     }
     r.readAsText(f);
 });
 
-/* --- SHOW STATS --- */
-function showStats(){
-    const statsArea=document.getElementById("statsArea");
-    statsArea.classList.remove("hidden");
-
-    let correctCount=0, wrongCount=0;
-    master.forEach(q=>{
-        const h=stableHash(JSON.stringify({t:q.text,o:q.option,c:q.correct}));
-        const s=stats[h]||{wrong:0,right:0};
-        correctCount+=s.right; wrongCount+=s.wrong;
-    });
-
-    const ctx=document.getElementById("pieChart").getContext("2d");
-    if(window.myChart) window.myChart.destroy();
-    window.myChart=new Chart(ctx,{
-        type:'pie',
-        data:{labels:["Correct","Wrong"],datasets:[{data:[correctCount,wrongCount],backgroundColor:["#4CAF50","#ff4d4d"]}]}
-    });
-
-    // top 5 wrong
-    let arr=[];
-    for(let k in stats) arr.push({text:k, wrong:stats[k].wrong});
-    arr.sort((a,b)=>b.wrong-a.wrong);
-    arr=arr.slice(0,5);
-
-    const hashToText={};
-    master.forEach(q=>{const h=stableHash(JSON.stringify({t:q.text,o:q.option,c:q.correct})); hashToText[h]=q.text;});
-
-    const topDiv=document.getElementById("topWrongList");
-    topDiv.innerHTML="";
-    arr.forEach(it=>{
-        const d=document.createElement("div");
-        const realQ=hashToText[it.text]||it.text;
-        d.className="topWrong";
-        d.innerHTML=`${realQ} <br> ভুল হয়েছে: ${it.wrong} বার`;
-        topDiv.appendChild(d);
-    });
-}
-
-/* --- START EXAM --- */
 function startExam(){
-    if(!master.length){ alert("প্রথমে JSON আপলোড করুন!"); return; }
+    if(!master.length){ alert("Upload JSON first!"); return; }
+
+    let start=Number(document.getElementById("startQ").value)-1;
+    let end=Number(document.getElementById("endQ").value);
+    if(start<0) start=0;
+    if(end>master.length) end=master.length;
+    if(start>=end){ alert("Start should be less than End!"); return; }
+
+    selected = master.slice(start,end);
+
     document.getElementById("homePage").classList.add("hidden");
     document.getElementById("examPage").classList.remove("hidden");
-
-    // weighted random
-    selected=[];
-    let pool=[];
-    master.forEach(q=>{
-        const h=stableHash(JSON.stringify({t:q.text,o:q.option,c:q.correct}));
-        const w=(stats[h]&&stats[h].wrong)? stats[h].wrong+1 :1;
-        for(let i=0;i<w;i++) pool.push(q);
-    });
-
-    // pick 24 unique
-    let used=new Set();
-    while(selected.length<24 && pool.length){
-        const idx=Math.floor(Math.random()*pool.length);
-        const q=pool[idx];
-        const h=stableHash(JSON.stringify({t:q.text,o:q.option,c:q.correct}));
-        if(!used.has(h)){ selected.push(q); used.add(h); }
-        pool.splice(idx,1);
-    }
 
     renderExam();
 }
 
-/* --- RENDER EXAM --- */
 function renderExam(){
     const box=document.getElementById("questionBox");
     box.innerHTML="";
@@ -158,7 +90,7 @@ function renderExam(){
             const odiv=document.createElement("div");
             odiv.className="option";
             odiv.innerText=`${labels[j]}) ${opt}`;
-            odiv.addEventListener("click",()=>{
+            odiv.addEventListener("click", ()=>{
                 if(odiv.classList.contains("locked")) return;
                 userAns[i]=j;
                 Array.from(div.getElementsByClassName("option")).forEach(el=>el.classList.add("locked"));
@@ -171,35 +103,10 @@ function renderExam(){
     });
 }
 
-/* --- FINISH EXAM --- */
-function finishExam(){
-    let correct=0, wrong=0;
-    selected.forEach((q,i)=>{
-        const h=stableHash(JSON.stringify({t:q.text,o:q.option,c:q.correct}));
-        const ua=userAns[i];
-        if(ua===["A","B","C","D"].indexOf(q.correct)){
-            correct++;
-            stats[h]=stats[h]||{wrong:0,right:0};
-            stats[h].right++;
-        } else {
-            wrong++;
-            stats[h]=stats[h]||{wrong:0,right:0};
-            stats[h].wrong++;
-        }
-    });
-    localStorage.setItem("stats", JSON.stringify(stats));
-
-    document.getElementById("examPage").classList.add("hidden");
-    document.getElementById("resultPage").classList.remove("hidden");
-    document.getElementById("resultText").innerHTML=`সঠিক: ${correct} / ভুল: ${wrong}`;
-    showStats();
-}
-
-/* --- BACK TO HOME --- */
 function goHome(){
-    document.getElementById("resultPage").classList.add("hidden");
-    document.getElementById("homePage").classList.remove("hidden");
     selected=[]; userAns={};
+    document.getElementById("examPage").classList.add("hidden");
+    document.getElementById("homePage").classList.remove("hidden");
 }
 </script>
 </body>
