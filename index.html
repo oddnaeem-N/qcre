@@ -22,10 +22,12 @@ body {
 
 h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
-.print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl, #fontControl, #perPageControl { 
+.print-btn, #saveJsonBtn, #loadJsonBtn, #addQuestion, #headingControl,
+#fontControl, #perPageControl { 
     display: inline-block; 
     margin: 4px; 
 }
+
 .print-btn, #saveJsonBtn, #loadJsonBtn {
     padding:6px 10px; background:#0078d7; color:#fff;
     border:none; border-radius:3px; cursor:pointer; font-size:16px;
@@ -46,7 +48,7 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
     padding: 6px;
 }
 
-/* HIDDEN EDIT/DELETE BUTTON (DEFAULT) */
+/* Edit/Delete buttons */
 .delete-btn, .edit-btn {
     display: none;
     position: absolute;
@@ -63,7 +65,7 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 }
 .edit-btn { background:#f39c12; right: 50px; }
 
-/* WHEN QUESTION IS TAPPED → SHOW BUTTONS */
+/* Show buttons when active */
 .question.active .delete-btn,
 .question.active .edit-btn {
     display: block;
@@ -79,15 +81,28 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
 .correct { color: darkblue; font-weight: bold; }
 
-/* Add Question Form */
-#addQuestion {
-    margin:10px 0; padding:10px; border:1px solid #ccc;
-}
+/* Add Question */
+#addQuestion { margin:10px 0; padding:10px; border:1px solid #ccc; }
 #addQuestion input, #addQuestion select { 
     width:100%; margin:3px 0; padding:4px; 
 }
-#addQuestion label { font-weight:500; }
 #addQuestion button { padding:6px 10px; margin-top:6px; cursor:pointer; }
+
+/* Edit Form */
+.edit-form {
+    margin-top:10px;
+    padding:10px;
+    background:#f7f7f7;
+    border:1px solid #bbb;
+}
+.edit-form input, .edit-form select {
+    width:100%;
+    margin:4px 0;
+    padding:4px;
+}
+.edit-form button{
+    margin-top:6px; padding:5px 10px; cursor:pointer;
+}
 
 /* Pagination */
 #pagination { text-align:center; margin: 10px 0; }
@@ -99,21 +114,19 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
     border:none; border-radius:3px; cursor:pointer;
 }
 
-/* MOBILE VIEW */
+/* MOBILE */
 @media (max-width: 600px) {
     .questions { column-count: 1 !important; }
 }
 
-/* Print mode */
+/* PRINT MODE */
 @media print {
     .print-btn, #addQuestion, .delete-btn, .edit-btn,
-    #headingControl, #fontControl, #saveJsonBtn, 
-    #loadJsonBtn, #pagination, #perPageControl {
+    #headingControl, #fontControl, #saveJsonBtn,
+    #loadJsonBtn, #pagination, #perPageControl,
+    .edit-form {
         display: none !important;
     }
-
-    .questions { column-count: 2 !important; }
-    .question { border: 1px solid #000; padding:8px; margin: 4px 0; }
 }
 </style>
 </head>
@@ -144,7 +157,7 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
 <!-- PER PAGE CONTROL -->
 <div id="perPageControl">
-    <label>প্রতি পেজে কয়টা প্রশ্ন দেখাবে:</label>
+    <label>প্রতি পেজে কয়টা প্রশ্ন:</label>
     <input type="number" id="perPageInput" value="10" min="1" style="width:80px;">
     <button onclick="updatePerPage()">Set</button>
 </div>
@@ -155,7 +168,7 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
 
 <u><h2 id="mainHeading">আমার প্রশ্নপত্র</h2></u>
 
-<!-- ADD QUESTION FORM -->
+<!-- Add Question -->
 <div id="addQuestion">
     <h3>নতুন প্রশ্ন এড করুন</h3>
     <label>প্রশ্ন:</label>
@@ -164,6 +177,7 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
     <label>খ) অপশন:</label><input type="text" id="optB">
     <label>গ) অপশন:</label><input type="text" id="optC">
     <label>ঘ) অপশন:</label><input type="text" id="optD">
+
     <label>সঠিক উত্তর:</label>
     <select id="correctOpt">
         <option value="A">ক</option>
@@ -171,6 +185,7 @@ h2 { text-align: center; margin: 8px; font-size: 24px; font-weight: 400; }
         <option value="C">গ</option>
         <option value="D">ঘ</option>
     </select>
+
     <button id="addBtn">এড করুন</button>
 </div>
 
@@ -212,7 +227,7 @@ window.addEventListener('load', () => {
     renderQuestions();
 });
 
-/* RENDER QUESTIONS */
+/* Render */
 function renderQuestions(showAll = false){
     const container = document.getElementById('questions');
     container.innerHTML='';
@@ -234,7 +249,6 @@ function renderQuestions(showAll = false){
         div.style.fontSize=qSize;
         div.style.fontFamily=fontFam;
 
-        /* TAP → SHOW BUTTONS */
         div.addEventListener("click", () => {
             document.querySelectorAll(".question").forEach(el=>el.classList.remove("active"));
             div.classList.add("active");
@@ -250,7 +264,7 @@ function renderQuestions(showAll = false){
                     </div>
                 `).join('')}
             </div>
-            <button class="edit-btn" onclick="editQuestion(${idx})">এডিট</button>
+            <button class="edit-btn" onclick="showEditForm(${idx}, this)">এডিট</button>
             <button class="delete-btn" onclick="deleteQuestion(${idx})">ডিলিট</button>
         `;
 
@@ -263,40 +277,61 @@ function renderQuestions(showAll = false){
     localStorage.setItem('questions', JSON.stringify(questions));
 }
 
-/* Pagination Controls */
-function prevPage(){ if(currentPage>1){ currentPage--; renderQuestions(); } }
-function nextPage(){ if(currentPage < Math.ceil(questions.length/perPage)){ currentPage++; renderQuestions(); } }
+/* Show edit form */
+function showEditForm(idx, button){
+    const q = questions[idx];
+    const parent = button.closest('.question');
 
-/* Update per page */
-function updatePerPage(){
-    perPage = Number(document.getElementById("perPageInput").value);
-    if(perPage < 1) perPage = 1;
-    localStorage.setItem("perPage", perPage);
-    currentPage = 1;
+    if(parent.querySelector(".edit-form")) return; 
+
+    const form = document.createElement("div");
+    form.className = "edit-form";
+
+    form.innerHTML = `
+        <label>প্রশ্ন:</label>
+        <input id="eText" value="${q.text}">
+        <label>ক:</label><input id="eA" value="${q.option[0]}">
+        <label>খ:</label><input id="eB" value="${q.option[1]}">
+        <label>গ:</label><input id="eC" value="${q.option[2]}">
+        <label>ঘ:</label><input id="eD" value="${q.option[3]}">
+
+        <label>সঠিক উত্তর:</label>
+        <select id="eCorrect">
+            <option value="A" ${q.correct==="A"?"selected":""}>ক</option>
+            <option value="B" ${q.correct==="B"?"selected":""}>খ</option>
+            <option value="C" ${q.correct==="C"?"selected":""}>গ</option>
+            <option value="D" ${q.correct==="D"?"selected":""}>ঘ</option>
+        </select>
+
+        <button onclick="saveEdit(${idx}, this)">Save</button>
+        <button onclick="this.parentNode.remove()">Cancel</button>
+    `;
+
+    parent.appendChild(form);
+}
+
+/* Save edit */
+function saveEdit(idx, btn){
+    const form = btn.parentNode;
+
+    const text=form.querySelector("#eText").value.trim();
+    const optA=form.querySelector("#eA").value.trim();
+    const optB=form.querySelector("#eB").value.trim();
+    const optC=form.querySelector("#eC").value.trim();
+    const optD=form.querySelector("#eD").value.trim();
+    const correct=form.querySelector("#eCorrect").value;
+
+    questions[idx] = {text:text, option:[optA,optB,optC,optD], correct:correct};
+
     renderQuestions();
 }
 
 /* Delete */
 function deleteQuestion(idx){
-    if(confirm('আপনি কি সত্যিই ডিলিট করতে চান?')){
+    if(confirm("ডিলিট করতে চান?")){
         questions.splice(idx,1);
         renderQuestions();
     }
-}
-
-/* Edit */
-function editQuestion(idx){
-    const q=questions[idx];
-    const text=prompt("প্রশ্ন:", q.text);
-    if(text===null) return;
-    const optA=prompt("ক:", q.option[0]); if(optA===null) return;
-    const optB=prompt("খ:", q.option[1]); if(optB===null) return;
-    const optC=prompt("গ:", q.option[2]); if(optC===null) return;
-    const optD=prompt("ঘ:", q.option[3]); if(optD===null) return;
-    const correct=prompt("সঠিক উত্তর (A/B/C/D):", q.correct);
-
-    questions[idx]={text:text, option:[optA,optB,optC,optD], correct:correct.toUpperCase()};
-    renderQuestions();
 }
 
 /* Add Question */
@@ -323,7 +358,7 @@ document.getElementById('addBtn').addEventListener('click',()=>{
     document.getElementById('optD').value='';
 });
 
-/* Set Heading */
+/* Heading */
 function updateHeading(){
     const h=document.getElementById('headingInput').value.trim();
     if(h){
@@ -332,8 +367,17 @@ function updateHeading(){
     }
 }
 
-/* Apply Font */
+/* Others */
 function applyFontSettings(){ renderQuestions(); }
+function prevPage(){ if(currentPage>1){ currentPage--; renderQuestions(); } }
+function nextPage(){ if(currentPage < Math.ceil(questions.length/perPage)){ currentPage++; renderQuestions(); } }
+function updatePerPage(){
+    perPage = Number(document.getElementById("perPageInput").value);
+    if(perPage < 1) perPage = 1;
+    localStorage.setItem("perPage", perPage);
+    currentPage = 1;
+    renderQuestions();
+}
 
 /* SAVE JSON */
 document.getElementById('saveJsonBtn').addEventListener('click',()=>{
@@ -371,11 +415,10 @@ document.getElementById('loadJsonBtn').addEventListener('change',e=>{
     reader.readAsText(file);
 });
 
-/* PRINT ALWAYS SHOWS ALL QUESTIONS */
+/* PRINT MODE → always show all */
 window.addEventListener("beforeprint", () => {
     renderQuestions(true);
 });
-
 </script>
 
 </body>
