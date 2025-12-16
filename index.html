@@ -21,9 +21,13 @@ body {
 .main-heading{
     text-align:center;
     font-size:24px;
-    font-weight:400;
-    text-decoration:underline;
+    font-weight:500;
+    text-decoration:none;
     margin:8px 0;
+    background-color: #8fd19e;
+    color: #fff;
+    padding: 8px;
+    border-radius: 5px;
 }
 
 .print-btn, #saveJsonBtn, #loadJsonBtn,
@@ -60,6 +64,11 @@ body {
     font-weight:bold;
     margin:6px 0;
     border-bottom:1px solid #000;
+    text-align:center;
+    background-color: #8fd19e;
+    color: #fff;
+    padding: 6px;
+    border-radius: 4px;
 }
 
 .delete-btn, .edit-btn {
@@ -119,6 +128,16 @@ body {
     .edit-form {
         display: none !important;
     }
+
+    .main-heading {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .topic-title {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 }
 </style>
 </head>
@@ -160,7 +179,13 @@ body {
 <h3>নতুন প্রশ্ন</h3>
 
 <label>টপিক:</label>
-<input type="text" id="topicInput">
+<select id="topicSelect" onchange="showCustomTopicInput()">
+    <option value="অন্যান্য">অন্যান্য</option>
+    <option value="গণিত">গণিত</option>
+    <option value="ইংরেজি">ইংরেজি</option>
+    <option value="custom">নতুন টপিক...</option>
+</select>
+<input type="text" id="customTopicInput" style="display:none;" placeholder="নতুন টপিক লিখুন">
 
 <label>প্রশ্ন:</label>
 <input type="text" id="manualText">
@@ -224,7 +249,19 @@ window.onload = () => {
     renderQuestions();
 };
 
-/* RENDER (REAL INDEX SAFE) */
+/* SHOW CUSTOM TOPIC INPUT */
+function showCustomTopicInput(){
+    const sel = document.getElementById("topicSelect");
+    const input = document.getElementById("customTopicInput");
+    if(sel.value === "custom"){
+        input.style.display = "inline-block";
+        input.value = "";
+    } else {
+        input.style.display = "none";
+    }
+}
+
+/* RENDER */
 function renderQuestions(showAll=false){
     const box = document.getElementById("questions");
     box.innerHTML = "";
@@ -284,13 +321,27 @@ function renderQuestions(showAll=false){
 
 /* ADD */
 addBtn.onclick=()=>{
+    let topic;
+    if(topicSelect.value === "custom" && customTopicInput.value.trim() !== ""){
+        topic = customTopicInput.value.trim();
+        const opt = document.createElement("option");
+        opt.value = topic;
+        opt.text = topic;
+        topicSelect.insertBefore(opt, topicSelect.lastElementChild);
+        topicSelect.value = topic;
+        customTopicInput.style.display = "none";
+    } else {
+        topic = topicSelect.value;
+    }
+
     questions.push({
         text:manualText.value,
         option:[optA.value,optB.value,optC.value,optD.value],
         correct:correctOpt.value,
-        topic:topicInput.value||"অন্যান্য"
+        topic:topic || "অন্যান্য"
     });
-    topicInput.value=manualText.value=optA.value=optB.value=optC.value=optD.value="";
+
+    manualText.value=optA.value=optB.value=optC.value=optD.value="";
     renderQuestions();
 };
 
@@ -381,7 +432,7 @@ saveJsonBtn.onclick=()=>{
     a.click();
 };
 
-/* JSON LOAD (OLD + NEW) */
+/* JSON LOAD */
 loadJsonBtn.onchange=e=>{
     const f=e.target.files[0];
     if(!f) return;
