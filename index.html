@@ -180,9 +180,6 @@ body {
 
 <label>টপিক:</label>
 <select id="topicSelect" onchange="showCustomTopicInput()">
-    <option value="অন্যান্য">অন্যান্য</option>
-    <option value="গণিত">গণিত</option>
-    <option value="ইংরেজি">ইংরেজি</option>
     <option value="custom">নতুন টপিক...</option>
 </select>
 <input type="text" id="customTopicInput" style="display:none;" placeholder="নতুন টপিক লিখুন">
@@ -250,14 +247,12 @@ window.onload = () => {
 };
 
 /* SHOW CUSTOM TOPIC INPUT */
-function showCustomTopicInput(){
-    const sel = document.getElementById("topicSelect");
-    const input = document.getElementById("customTopicInput");
-    if(sel.value === "custom"){
-        input.style.display = "inline-block";
-        input.value = "";
+function showCustomTopicInput(selectEl, inputEl){
+    if(selectEl.value === "custom"){
+        inputEl.style.display = "inline-block";
+        inputEl.value = "";
     } else {
-        input.style.display = "none";
+        inputEl.style.display = "none";
     }
 }
 
@@ -300,7 +295,7 @@ function renderQuestions(showAll=false){
 
             const L=['ক','খ','গ','ঘ'];
             d.innerHTML=`
-            ${toBengaliNum(realIndex+1)}. ${q.text}
+            ${q.text}
             <div class="options" style="font-size:${oSize}">
             ${q.option.map((o,j)=>`
                 <div class="${q.correct===['A','B','C','D'][j]?'correct':''}">
@@ -353,9 +348,20 @@ function showEditForm(idx, btn){
 
     const f=document.createElement("div");
     f.className="edit-form";
+
+    // Create topic dropdown dynamically with current topic selected
+    const allTopics = Array.from(new Set(questions.map(q=>q.topic))).filter(Boolean);
+    let topicOptions = allTopics.map(t=>{
+        return `<option value="${t}" ${t===q.topic?'selected':''}>${t}</option>`;
+    }).join('');
+    topicOptions += `<option value="custom">নতুন টপিক...</option>`;
+
     f.innerHTML=`
         <label>টপিক:</label>
-        <input id="eTopic" value="${q.topic}">
+        <select id="eTopicSelect" onchange="showCustomTopicInput(this,eCustomTopic)">
+            ${topicOptions}
+        </select>
+        <input type="text" id="eCustomTopic" style="display:none;" placeholder="নতুন টপিক লিখুন">
         <label>প্রশ্ন:</label>
         <input id="eText" value="${q.text}">
         <input id="eA" value="${q.option[0]}">
@@ -372,12 +378,22 @@ function showEditForm(idx, btn){
         <button onclick="this.parentNode.remove()">Cancel</button>
     `;
     parent.appendChild(f);
+    document.getElementById("eCorrect").value = q.correct;
 }
 
 function saveEdit(idx,btn){
     const f=btn.parentNode;
+    let topic;
+    const sel = f.querySelector("#eTopicSelect");
+    const customInput = f.querySelector("#eCustomTopic");
+    if(sel.value==="custom" && customInput.value.trim()!==""){
+        topic = customInput.value.trim();
+    } else {
+        topic = sel.value;
+    }
+
     questions[idx]={
-        topic:f.querySelector("#eTopic").value,
+        topic: topic || "অন্যান্য",
         text:f.querySelector("#eText").value,
         option:[
             f.querySelector("#eA").value,
@@ -441,11 +457,11 @@ loadJsonBtn.onchange=e=>{
         try{
             const data=JSON.parse(ev.target.result);
             if(data.heading){
-                mainHeading.innerText=data.heading;
-                headingInput.value=data.heading;
+                mainHeading.innerText = data.heading;
+                headingInput.value = data.heading;
             }
             if(Array.isArray(data.questions)){
-                questions=data.questions.map(q=>({
+                questions = data.questions.map(q=>({
                     text:q.text,
                     option:q.option,
                     correct:q.correct,
