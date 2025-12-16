@@ -11,104 +11,159 @@
     src: url('https://cdn.jsdelivr.net/gh/medialab/solaiman-lipi-font/SolaimanLipi.ttf') format('truetype');
 }
 
-body{
-    font-family:SolaimanLipi,sans-serif;
-    font-size:18px;
-    margin:4px;
-    color:#111;
+body {
+    font-family: 'SolaimanLipi', sans-serif;
+    font-size: 18px;
+    margin: 4px;
+    color: #111;
 }
 
-h2{text-align:center;font-weight:400;}
-h3{margin:6px 0;border-bottom:1px solid #000;}
+.main-heading{
+    text-align:center;
+    font-size:24px;
+    font-weight:400;
+    text-decoration:underline;
+    margin:8px 0;
+}
 
-.print-btn,#saveJsonBtn{
+.print-btn, #saveJsonBtn, #loadJsonBtn,
+#addQuestion, #headingControl,
+#fontControl, #perPageControl {
+    margin: 4px;
+}
+
+.print-btn, #saveJsonBtn {
     padding:6px 10px;
     background:#0078d7;
     color:#fff;
     border:none;
     border-radius:3px;
     cursor:pointer;
-    margin:4px;
+    font-size:16px;
 }
 
-.questions{column-count:2;column-gap:6px;}
+.questions {
+    column-count: 2;
+    column-gap: 6px;
+}
 
-.question{
-    border:1px solid #ccc;
-    margin-bottom:8px;
-    padding:6px;
-    position:relative;
+.question {
+    margin-bottom: 8px;
+    page-break-inside: avoid;
+    font-weight: bold;
+    position: relative;
+    border: 1px solid #ccc;
+    padding: 6px;
+}
+
+.topic-title{
     font-weight:bold;
-    page-break-inside:avoid;
+    margin:6px 0;
+    border-bottom:1px solid #000;
 }
 
-.options{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:4px;
-    margin-left:6px;
-    font-weight:normal;
+.delete-btn, .edit-btn {
+    display: none;
+    position: absolute;
+    top: 0;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.edit-btn { background:#f39c12; right: 50px; }
+.delete-btn { right: 0; }
+
+.question.active .delete-btn,
+.question.active .edit-btn {
+    display: block;
 }
 
-.correct{color:darkblue;font-weight:bold;}
-
-.edit-btn,.delete-btn{
-    display:none;
-    position:absolute;
-    top:0;
-    font-size:12px;
-    border:none;
-    border-radius:3px;
-    color:#fff;
-    cursor:pointer;
-    padding:2px 6px;
-}
-.edit-btn{right:50px;background:#f39c12;}
-.delete-btn{right:0;background:#e74c3c;}
-
-.question.active .edit-btn,
-.question.active .delete-btn{display:block;}
-
-#addQuestion,.edit-form{
-    border:1px solid #ccc;
-    padding:10px;
-    margin:10px 0;
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-left: 6px;
+    font-weight: normal;
 }
 
-input,select{
+.correct { color: darkblue; font-weight: bold; }
+
+#addQuestion input, #addQuestion select,
+.edit-form input, .edit-form select {
     width:100%;
-    margin:4px 0;
+    margin:3px 0;
     padding:4px;
 }
 
-@media(max-width:600px){
-    .questions{column-count:1;}
+.edit-form {
+    margin-top:10px;
+    padding:10px;
+    background:#f7f7f7;
+    border:1px solid #bbb;
 }
 
-@media print{
-    .print-btn,#addQuestion,.edit-btn,.delete-btn,
-    #saveJsonBtn,#loadJsonBtn,#pagination{display:none!important;}
+#pagination { text-align:center; margin:10px 0; }
+
+@media (max-width: 600px) {
+    .questions { column-count: 1 !important; }
+}
+
+@media print {
+    .print-btn, #addQuestion, .delete-btn, .edit-btn,
+    #headingControl, #fontControl, #saveJsonBtn,
+    #loadJsonBtn, #pagination, #perPageControl,
+    .edit-form {
+        display: none !important;
+    }
 }
 </style>
 </head>
 
 <body>
 
+<div id="headingControl">
+    <label>প্রিন্টের হেডিং:</label>
+    <input type="text" id="headingInput" value="আমার প্রশ্নপত্র">
+    <button onclick="updateHeading()">হেডিং সেট করুন</button>
+</div>
+
+<div id="fontControl">
+    প্রশ্ন ফন্ট:
+    <input type="number" id="questionFontSize" value="18"> px
+    অপশন ফন্ট:
+    <input type="number" id="optionFontSize" value="16"> px
+    <select id="fontFamilySelect">
+        <option value="SolaimanLipi">Solaiman Lipi</option>
+        <option value="Arial">Arial</option>
+        <option value="Tahoma">Tahoma</option>
+    </select>
+    <button onclick="applyFontSettings()">Apply</button>
+</div>
+
+<div id="perPageControl">
+    প্রতি পেজে প্রশ্ন:
+    <input type="number" id="perPageInput" value="10" style="width:70px;">
+    <button onclick="updatePerPage()">Set</button>
+</div>
+
 <button class="print-btn" onclick="window.print()">🖨️ Print</button>
 <button id="saveJsonBtn">💾 JSON সেভ</button>
 <input type="file" id="loadJsonBtn" accept=".json">
 
-<u><h2 id="mainHeading">আমার প্রশ্নপত্র</h2></u>
+<h2 id="mainHeading" class="main-heading">আমার প্রশ্নপত্র</h2>
 
-<!-- ADD QUESTION -->
 <div id="addQuestion">
 <h3>নতুন প্রশ্ন</h3>
 
 <label>টপিক:</label>
-<input id="topicInput" placeholder="যেমন: বাংলাদেশ">
+<input type="text" id="topicInput">
 
 <label>প্রশ্ন:</label>
-<input id="qText">
+<input type="text" id="manualText">
 
 <label>ক:</label><input id="optA">
 <label>খ:</label><input id="optB">
@@ -117,71 +172,89 @@ input,select{
 
 <label>সঠিক উত্তর:</label>
 <select id="correctOpt">
-<option value="A">ক</option>
-<option value="B">খ</option>
-<option value="C">গ</option>
-<option value="D">ঘ</option>
+    <option value="A">ক</option>
+    <option value="B">খ</option>
+    <option value="C">গ</option>
+    <option value="D">ঘ</option>
 </select>
 
-<button onclick="addQuestion()">এড করুন</button>
+<button id="addBtn">এড করুন</button>
 </div>
 
 <div class="questions" id="questions"></div>
 
-<div id="pagination" style="text-align:center;">
-<button onclick="prevPage()">⬅</button>
-<span id="pageInfo"></span>
-<button onclick="nextPage()">➡</button>
+<div id="pagination">
+    <button onclick="prevPage()">⬅ প্রিভিয়াস</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()">নেক্সট ➡</button>
 </div>
 
 <script>
-function bn(n){
-    const b=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    return n.toString().split('').map(x=>b[x]||x).join('');
+function toBengaliNum(num){
+    const bn=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toString().split('').map(d=>bn[d]||d).join('');
 }
 
-let questions=[];
-let currentPage=1;
-let perPage=10;
+let currentPage = 1;
+let perPage = 10;
+let questions = [];
 
-/* LOAD FROM LOCAL */
-window.onload=()=>{
-    const saved=localStorage.getItem("questions");
+/* LOAD */
+window.onload = () => {
+    const saved = localStorage.getItem("questions");
+    const heading = localStorage.getItem("heading");
+    const per = localStorage.getItem("perPage");
+
     if(saved){
-        questions=JSON.parse(saved).map(q=>({
+        questions = JSON.parse(saved).map(q=>({
             text:q.text,
             option:q.option,
             correct:q.correct,
-            topic:q.topic||"অন্যান্য"
+            topic:q.topic || "অন্যান্য"
         }));
     }
-    render();
+    if(heading){
+        mainHeading.innerText = heading;
+        headingInput.value = heading;
+    }
+    if(per){
+        perPage = Number(per);
+        perPageInput.value = perPage;
+    }
+    renderQuestions();
 };
 
-/* RENDER */
-function render(showAll=false){
-    const box=document.getElementById("questions");
-    box.innerHTML="";
+/* RENDER (REAL INDEX SAFE) */
+function renderQuestions(showAll=false){
+    const box = document.getElementById("questions");
+    box.innerHTML = "";
 
-    const start=(currentPage-1)*perPage;
-    const list=showAll?questions:questions.slice(start,start+perPage);
+    const qSize = questionFontSize.value + "px";
+    const oSize = optionFontSize.value + "px";
+    const font = fontFamilySelect.value;
 
-    const grouped={};
-    list.forEach((q,i)=>{
-        const t=q.topic||"অন্যান্য";
+    const start = (currentPage-1)*perPage;
+    const slice = showAll ? questions : questions.slice(start,start+perPage);
+
+    const grouped = {};
+    slice.forEach((q,i)=>{
+        const realIndex = showAll ? i : start + i;
+        const t = q.topic || "অন্যান্য";
         if(!grouped[t]) grouped[t]=[];
-        grouped[t].push({q,i});
+        grouped[t].push({q, realIndex});
     });
 
     Object.keys(grouped).forEach(topic=>{
-        const h=document.createElement("h3");
+        const h=document.createElement("div");
+        h.className="topic-title";
         h.innerText=topic;
         box.appendChild(h);
 
-        grouped[topic].forEach(({q,i})=>{
-            const idx=showAll?i:start+i;
+        grouped[topic].forEach(({q, realIndex})=>{
             const d=document.createElement("div");
             d.className="question";
+            d.style.fontSize=qSize;
+            d.style.fontFamily=font;
 
             d.onclick=()=>{
                 document.querySelectorAll(".question").forEach(x=>x.classList.remove("active"));
@@ -190,102 +263,136 @@ function render(showAll=false){
 
             const L=['ক','খ','গ','ঘ'];
             d.innerHTML=`
-            ${bn(idx+1)}. ${q.text}
-            <div class="options">
+            ${toBengaliNum(realIndex+1)}. ${q.text}
+            <div class="options" style="font-size:${oSize}">
             ${q.option.map((o,j)=>`
-            <div class="${q.correct===['A','B','C','D'][j]?'correct':''}">
-            ${L[j]}) ${o}</div>`).join("")}
+                <div class="${q.correct===['A','B','C','D'][j]?'correct':''}">
+                ${L[j]}) ${o}</div>`).join("")}
             </div>
-            <button class="edit-btn" onclick="editQ(${idx},this)">এডিট</button>
-            <button class="delete-btn" onclick="delQ(${idx})">ডিলিট</button>
+            <button class="edit-btn" onclick="showEditForm(${realIndex},this)">এডিট</button>
+            <button class="delete-btn" onclick="deleteQuestion(${realIndex})">ডিলিট</button>
             `;
             box.appendChild(d);
         });
     });
 
-    pageInfo.innerText=`পৃষ্ঠা ${bn(currentPage)}`;
+    pageInfo.innerText =
+        `পৃষ্ঠা ${toBengaliNum(currentPage)} / ${toBengaliNum(Math.ceil(questions.length/perPage))}`;
+
     localStorage.setItem("questions",JSON.stringify(questions));
 }
 
 /* ADD */
-function addQuestion(){
+addBtn.onclick=()=>{
     questions.push({
-        topic:topicInput.value.trim()||"অন্যান্য",
-        text:qText.value.trim(),
+        text:manualText.value,
         option:[optA.value,optB.value,optC.value,optD.value],
-        correct:correctOpt.value
+        correct:correctOpt.value,
+        topic:topicInput.value||"অন্যান্য"
     });
-    topicInput.value=qText.value=optA.value=optB.value=optC.value=optD.value="";
-    render();
-}
+    topicInput.value=manualText.value=optA.value=optB.value=optC.value=optD.value="";
+    renderQuestions();
+};
 
 /* EDIT */
-function editQ(i,b){
-    const q=questions[i];
-    const p=b.parentNode;
-    if(p.querySelector(".edit-form")) return;
+function showEditForm(idx, btn){
+    const q=questions[idx];
+    const parent=btn.closest(".question");
+    if(parent.querySelector(".edit-form")) return;
 
     const f=document.createElement("div");
     f.className="edit-form";
     f.innerHTML=`
-    <input value="${q.topic}">
-    <input value="${q.text}">
-    <input value="${q.option[0]}">
-    <input value="${q.option[1]}">
-    <input value="${q.option[2]}">
-    <input value="${q.option[3]}">
-    <select>
-      <option value="A">ক</option>
-      <option value="B">খ</option>
-      <option value="C">গ</option>
-      <option value="D">ঘ</option>
-    </select>
-    <button onclick="saveEdit(${i},this)">Save</button>
+        <label>টপিক:</label>
+        <input id="eTopic" value="${q.topic}">
+        <label>প্রশ্ন:</label>
+        <input id="eText" value="${q.text}">
+        <input id="eA" value="${q.option[0]}">
+        <input id="eB" value="${q.option[1]}">
+        <input id="eC" value="${q.option[2]}">
+        <input id="eD" value="${q.option[3]}">
+        <select id="eCorrect">
+            <option value="A">ক</option>
+            <option value="B">খ</option>
+            <option value="C">গ</option>
+            <option value="D">ঘ</option>
+        </select>
+        <button onclick="saveEdit(${idx},this)">Save</button>
+        <button onclick="this.parentNode.remove()">Cancel</button>
     `;
-    p.appendChild(f);
+    parent.appendChild(f);
 }
 
-/* SAVE EDIT */
-function saveEdit(i,b){
-    const f=b.parentNode;
-    questions[i]={
-        topic:f.children[0].value||"অন্যান্য",
-        text:f.children[1].value,
-        option:[f.children[2].value,f.children[3].value,f.children[4].value,f.children[5].value],
-        correct:f.children[6].value
+function saveEdit(idx,btn){
+    const f=btn.parentNode;
+    questions[idx]={
+        topic:f.querySelector("#eTopic").value,
+        text:f.querySelector("#eText").value,
+        option:[
+            f.querySelector("#eA").value,
+            f.querySelector("#eB").value,
+            f.querySelector("#eC").value,
+            f.querySelector("#eD").value
+        ],
+        correct:f.querySelector("#eCorrect").value
     };
-    render();
+    renderQuestions();
 }
 
 /* DELETE */
-function delQ(i){
+function deleteQuestion(idx){
     if(confirm("ডিলিট করবেন?")){
-        questions.splice(i,1);
-        render();
+        questions.splice(idx,1);
+        renderQuestions();
     }
 }
 
-/* PAGINATION */
-function prevPage(){if(currentPage>1){currentPage--;render();}}
-function nextPage(){currentPage++;render();}
+/* OTHERS */
+function updateHeading(){
+    const h=headingInput.value.trim();
+    if(h){
+        mainHeading.innerText=h;
+        localStorage.setItem("heading",h);
+    }
+}
+function applyFontSettings(){ renderQuestions(); }
+function updatePerPage(){
+    perPage=Number(perPageInput.value)||1;
+    localStorage.setItem("perPage",perPage);
+    currentPage=1;
+    renderQuestions();
+}
+function prevPage(){ if(currentPage>1){currentPage--;renderQuestions();} }
+function nextPage(){
+    if(currentPage<Math.ceil(questions.length/perPage)){
+        currentPage++;renderQuestions();
+    }
+}
 
-/* SAVE JSON */
+/* JSON SAVE */
 saveJsonBtn.onclick=()=>{
-    const blob=new Blob([JSON.stringify({questions},null,2)],{type:"application/json"});
+    const blob=new Blob([JSON.stringify({
+        heading:mainHeading.innerText,
+        questions
+    },null,2)],{type:"application/json"});
     const a=document.createElement("a");
     a.href=URL.createObjectURL(blob);
     a.download="questions.json";
     a.click();
 };
 
-/* LOAD JSON (BACKWARD COMPATIBLE) */
+/* JSON LOAD (OLD + NEW) */
 loadJsonBtn.onchange=e=>{
-    const file=e.target.files[0];
-    if(!file) return;
+    const f=e.target.files[0];
+    if(!f) return;
     const r=new FileReader();
     r.onload=ev=>{
         try{
             const data=JSON.parse(ev.target.result);
+            if(data.heading){
+                mainHeading.innerText=data.heading;
+                headingInput.value=data.heading;
+            }
             if(Array.isArray(data.questions)){
                 questions=data.questions.map(q=>({
                     text:q.text,
@@ -294,17 +401,14 @@ loadJsonBtn.onchange=e=>{
                     topic:q.topic||"অন্যান্য"
                 }));
                 currentPage=1;
-                render();
+                renderQuestions();
             }
-        }catch{
-            alert("Invalid JSON");
-        }
+        }catch{ alert("Invalid JSON"); }
     };
-    r.readAsText(file);
+    r.readAsText(f);
 };
 
-/* PRINT */
-window.addEventListener("beforeprint",()=>render(true));
+window.addEventListener("beforeprint",()=>renderQuestions(true));
 </script>
 
 </body>
